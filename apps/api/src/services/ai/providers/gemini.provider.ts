@@ -25,6 +25,35 @@ const BLOCKED_FINISH_REASONS = new Set<string>([
   FinishReason.SPII,
 ]);
 
+/** The only schema keywords sent to Gemini: the shape of the answer, nothing else. */
+const SHAPE_KEYWORDS = new Set(['type', 'properties', 'required', 'items', 'enum']);
+
+/**
+ * Reduces a JSON Schema to its shape. Gemini rejects some keywords that
+ * z.toJSONSchema emits (`$schema`, large integer bounds, ...) with
+ * 400 INVALID_ARGUMENT. Lengths, bounds and extra fields are still enforced:
+ * AIService validates every answer against the full Zod schema.
+ */
+export function toGeminiSchema(schema: unknown): unknown {
+  if (Array.isArray(schema)) return schema.map(toGeminiSchema);
+  if (typeof schema !== 'object' || schema === null) return schema;
+
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(schema)) {
+    if (!SHAPE_KEYWORDS.has(key)) continue;
+    if (key === 'properties' && typeof value === 'object' && value !== null) {
+      result.properties = Object.fromEntries(
+        Object.entries(value).map(([name, property]) => [name, toGeminiSchema(property)]),
+      );
+    } else if (key === 'items') {
+      result.items = toGeminiSchema(value);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
 function toContents(messages: ChatMessage[]) {
   return messages.map((message) => ({
     role: message.role === 'assistant' ? 'model' : 'user',
@@ -108,7 +137,10 @@ export function createGeminiProvider(options: GeminiProviderOptions): AIProvider
           maxOutputTokens: maxOutputTokens + THINKING_HEADROOM_TOKENS,
           abortSignal: signal,
           ...(json
-            ? { responseMimeType: 'application/json', responseJsonSchema: json.schema }
+            ? {
+                responseMimeType: 'application/json',
+                responseJsonSchema: toGeminiSchema(json.schema),
+              }
             : {}),
         },
       });

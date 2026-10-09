@@ -2,13 +2,23 @@ import { ApiError, FinishReason, type GenerateContentParameters } from '@google/
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
+import { pino } from 'pino';
+import { z } from 'zod';
+
+import { AppError } from '../src/errors/AppError.js';
+import { codeReviewOutputSchema } from '../src/schemas/code-review.schema.js';
+import { createAIService } from '../src/services/ai/ai.service.js';
 import { createAIProvider } from '../src/services/ai/providers/index.js';
 import { AIProviderError } from '../src/services/ai/providers/AIProvider.js';
 import {
   createGeminiProvider,
+  toGeminiSchema,
   type GeminiModels,
 } from '../src/services/ai/providers/gemini.provider.js';
+import { createProfileService } from '../src/services/profile.service.js';
+import { createSupabaseUsage } from '../src/services/usage/supabaseUsage.js';
 
+import { createFakeSupabase } from './helpers/fakeSupabase.js';
 import { buildTestApp } from './helpers/testApp.js';
 import { bearer, signToken, USER_A, USER_B } from './helpers/tokens.js';
 
@@ -265,5 +275,87 @@ describe('real provider allowlist', () => {
     expect(res.body.error.code).toBe('AI_PROVIDER_ERROR');
     expect(JSON.stringify(res.body)).not.toContain('SAFETY');
     expect(supabase.usage.get(USER_A)?.chat ?? 0).toBe(0);
+  });
+});
+
+describe('Gemini structured output schema', () => {
+  const fullSchema = z.toJSONSchema(codeReviewOutputSchema);
+  const FORBIDDEN = [
+    '$schema',
+    'exclusiveMinimum',
+    'maximum',
+    'minLength',
+    'maxLength',
+    'maxItems',
+    'additionalProperties',
+  ];
+
+  function keysDeep(value: unknown): string[] {
+    if (Array.isArray(value)) return value.flatMap(keysDeep);
+    if (typeof value !== 'object' || value === null) return [];
+    return Object.entries(value).flatMap(([key, inner]) => [key, ...keysDeep(inner)]);
+  }
+
+  it('keeps only the shape of the review schema', () => {
+    const reduced = toGeminiSchema(fullSchema);
+
+    expect(keysDeep(reduced).filter((key) => FORBIDDEN.includes(key))).toEqual([]);
+    expect(reduced).toEqual({
+      type: 'object',
+      properties: {
+        summary: { type: 'string' },
+        issues: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              severity: { type: 'string', enum: ['info', 'warning', 'error'] },
+              line: { type: 'integer' },
+              message: { type: 'string' },
+              suggestion: { type: 'string' },
+            },
+            required: ['severity', 'message', 'suggestion'],
+          },
+        },
+        improvedCode: { type: 'string' },
+        nextStep: { type: 'string' },
+      },
+      required: ['summary', 'issues', 'nextStep'],
+    });
+  });
+
+  it('sends the reduced schema and still rejects answers that break the full schema', async () => {
+    const tooLong = { summary: 'x'.repeat(3_000), issues: [], nextStep: 'next' };
+    const fake = fakeModels(async () => ok(JSON.stringify(tooLong)));
+    const gemini = createGeminiProvider({
+      apiKey: 'test-key-not-real-000000',
+      model: 'gemini-test',
+      models: fake.models,
+    });
+    const supabase = createFakeSupabase();
+    const service = createAIService({
+      selectProvider: () => gemini,
+      usageGuard: createSupabaseUsage(supabase.factory).guard,
+      profileService: createProfileService(supabase.factory),
+      aiTimeoutMs: 1_000,
+    });
+
+    await expect(
+      service.reviewCode(
+        {
+          userId: USER_A,
+          accessToken: await signToken(),
+          signal: new AbortController().signal,
+          log: pino({ level: 'silent' }),
+        },
+        { language: 'javascript', task: 'explain', code: 'let a = 1;' },
+      ),
+    ).rejects.toSatisfy(
+      (error) => error instanceof AppError && error.code === 'AI_INVALID_RESPONSE',
+    );
+
+    const sent = fake.requests[0]?.config?.responseJsonSchema;
+    expect(keysDeep(sent).filter((key) => FORBIDDEN.includes(key))).toEqual([]);
+    expect(supabase.usage.get(USER_A)?.code_review ?? 0).toBe(0);
   });
 });
