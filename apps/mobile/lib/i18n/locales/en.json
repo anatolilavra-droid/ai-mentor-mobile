@@ -1,0 +1,130 @@
+{
+  "common": {
+    "comingSoon": "Coming soon",
+    "comingInUpdate": "Available in a future update",
+    "loading": "Loading",
+    "retry": "Try again",
+    "backHome": "Back to Home",
+    "error": {
+      "title": "Something went off track",
+      "message": "This screen could not load. Your data is safe — try again in a moment."
+    }
+  },
+  "tabs": {
+    "home": "Home",
+    "learn": "Learn",
+    "chat": "Chat",
+    "projects": "Projects",
+    "profile": "Profile",
+    "a11yHint": "Opens the {{label}} tab"
+  },
+  "home": {
+    "eyebrow": "Today · {{date}}",
+    "greeting": {
+      "morning": "Good morning, {{name}}.",
+      "afternoon": "Good afternoon, {{name}}.",
+      "evening": "Good evening, {{name}}.",
+      "night": "Still coding, {{name}}?"
+    },
+    "subtitle": "One clear step forward is enough for today.",
+    "nextStep": {
+      "label": "Next step",
+      "progress": "{{percent}}% of {{track}}",
+      "lessonsLeft_one": "{{count}} lesson left",
+      "lessonsLeft_other": "{{count}} lessons left",
+      "progressA11y": "Progress: {{percent}} percent"
+    },
+    "quickActions": {
+      "label": "Ask your mentor",
+      "ask": {
+        "title": "Ask a question",
+        "subtitle": "Concepts, explained at your level"
+      },
+      "explain": {
+        "title": "Explain my code",
+        "subtitle": "Line by line, without jargon"
+      },
+      "fix": {
+        "title": "Fix an error",
+        "subtitle": "Understand the cause, not just the patch"
+      }
+    },
+    "preview": {
+      "label": "Today's concept"
+    },
+    "recent": {
+      "label": "Saved answers",
+      "emptyTitle": "Nothing saved yet",
+      "emptyDescription": "Useful mentor answers you save will live here."
+    },
+    "primaryAction": "Continue learning",
+    "loadingLabel": "Loading your day"
+  },
+  "learn": {
+    "eyebrow": "Learning path",
+    "title": "Learn with intent.",
+    "subtitle": "A personal plan, built around your level and the minutes you actually have.",
+    "emptyTitle": "Your plan starts here",
+    "emptyDescription": "Soon your mentor will turn a goal into modules, daily tasks and mini-projects.",
+    "previewLabel": "What will live here",
+    "preview": {
+      "plan": "A personal learning plan",
+      "tasks": "Daily tasks you can tick off",
+      "progress": "Progress you can actually see"
+    },
+    "primaryAction": "Build my plan"
+  },
+  "chat": {
+    "eyebrow": "AI mentor",
+    "title": "Ask anything.",
+    "subtitle": "Questions, code, errors — answered step by step, with short examples.",
+    "emptyTitle": "Your mentor is almost here",
+    "emptyDescription": "Conversations will appear here once the mentor is connected.",
+    "previewLabel": "What you will be able to ask",
+    "preview": {
+      "questions": "Programming questions, at your level",
+      "explain": "Explanations of real code",
+      "fix": "Error fixes with the reasoning behind them"
+    },
+    "inputPlaceholder": "Ask about code, errors, concepts…",
+    "inputA11y": "Message input, available in a future update",
+    "send": "Send message"
+  },
+  "projects": {
+    "eyebrow": "Workspace",
+    "title": "Your projects.",
+    "subtitle": "Keep learning projects organised: tasks, notes and the next action.",
+    "emptyTitle": "No projects yet",
+    "emptyDescription": "Soon you will track each project from idea to done, with a suggested next step.",
+    "previewLabel": "What each project will hold",
+    "preview": {
+      "tasks": "Tasks and progress",
+      "notes": "Notes and saved answers",
+      "next": "A recommended next action"
+    },
+    "primaryAction": "New project"
+  },
+  "profile": {
+    "eyebrow": "Profile",
+    "level": "Junior",
+    "planFree": "Free",
+    "preferences": "Preferences",
+    "language": "Language",
+    "languageValue": "English",
+    "languageHint": "More languages soon",
+    "haptics": "Haptic feedback",
+    "hapticsHint": "Subtle vibration on taps",
+    "appearance": "Appearance",
+    "appearanceValue": "Dark",
+    "about": "About",
+    "version": "Version",
+    "plan": "Plan",
+    "saved": "Preferences saved",
+    "primaryAction": "Edit profile"
+  },
+  "notFound": {
+    "eyebrow": "404",
+    "title": "Lost in the codebase.",
+    "description": "This screen does not exist. Let's get you back to familiar ground."
+  }
+}

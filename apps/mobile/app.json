@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "AI Mentor",
+    "slug": "ai-mentor-mobile",
+    "scheme": "aimentor",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0F1012",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "dev.anatoliy.aimentor"
+    },
+    "android": {
+      "package": "dev.anatoliy.aimentor",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F1012",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0F1012",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 120
+        }
+      ],
+      "expo-localization",
+      [
+        "expo-navigation-bar",
+        {
+          "style": "light",
+          "enforceContrast": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "web": {
+      "output": "single",
+      "bundler": "metro",
+      "backgroundColor": "#0F1012"
+    }
+  }
+}
