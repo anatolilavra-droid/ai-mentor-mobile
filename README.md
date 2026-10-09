@@ -4,7 +4,7 @@ A premium, dark-first mobile AI mentor for beginner and junior developers:
 learn programming, understand errors, review code, follow a personal
 learning plan, and keep projects and useful answers in one place.
 
-> **Status:** Phase 4 — AI Backend Foundation. Email and password accounts
+> **Status:** Phase 4 — AI Backend Foundation completed. Email and password accounts
 > (Supabase Auth), secure session storage, protected routes, a guided
 > onboarding flow, a technologies catalog and "Personalize your mentor". The
 > interface is available in English, Russian and German. The backend

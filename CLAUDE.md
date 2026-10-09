@@ -602,8 +602,8 @@ Phase 1: Mobile Foundation — completed.
 Phase 2: Authentication and User Profile — completed (approved by Anatoliy).
 Verified on a physical Android device: sign up, sign in, sign out, session
 restoration after restart, profile setup and profile editing.
-Still to verify on a device: the password reset flow and the full
-supabase/tests/rls_profiles.sql run.
+supabase/tests/rls_profiles.sql passes (run during the Phase 4 review).
+Still to verify on a device: the password reset flow.
 
 Phase 3: Onboarding and Personalization — completed (approved by Anatoliy).
 Verified on a physical Android device: the full onboarding flow, step
@@ -618,10 +618,10 @@ de.json must keep exactly the same keys and placeholders
 (__tests__/i18n.test.ts checks this). The saved ui_language is applied
 after saving; signed-out screens follow the device language.
 
-Phase 4: AI Backend Foundation — implemented, waiting for Anatoliy's review.
+Phase 4: AI Backend Foundation — completed (approved by Anatoliy).
 apps/api: Express 5 + TypeScript strict. GET /health, GET /api/me and
 POST /api/ai/chat with a mock AI provider. Verified by Vitest + Supertest in
-the "API checks" GitHub workflow; not deployed.
+the "API checks" GitHub workflow (green); not deployed.
 
 Phase 4 rules (keep them):
 - Supabase access tokens are verified locally with the project's public
