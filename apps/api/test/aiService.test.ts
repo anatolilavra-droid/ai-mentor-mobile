@@ -7,7 +7,7 @@ import { createAIService, type AICall } from '../src/services/ai/ai.service.js';
 import type { AIProvider } from '../src/services/ai/providers/AIProvider.js';
 import { createMockProvider } from '../src/services/ai/providers/mock.provider.js';
 import { createProfileService } from '../src/services/profile.service.js';
-import { noopUsageGuard } from '../src/services/usage/noopUsageGuard.js';
+import { createSupabaseUsage } from '../src/services/usage/supabaseUsage.js';
 
 import { createFakeSupabase } from './helpers/fakeSupabase.js';
 import { signToken, USER_A } from './helpers/tokens.js';
@@ -22,10 +22,11 @@ async function makeCall(): Promise<AICall> {
 }
 
 function makeService(provider: AIProvider) {
+  const supabase = createFakeSupabase();
   return createAIService({
-    provider,
-    usageGuard: noopUsageGuard,
-    profileService: createProfileService(createFakeSupabase().factory),
+    selectProvider: () => provider,
+    usageGuard: createSupabaseUsage(supabase.factory).guard,
+    profileService: createProfileService(supabase.factory),
     aiTimeoutMs: 1_000,
   });
 }
@@ -65,7 +66,7 @@ describe('AIService.reviewCode', () => {
 
     expect(codeReviewOutputSchema.parse(result.review).summary).toContain('Mock explain review');
     expect(result.promptVersion).toBe('code-review/v1');
-    expect(result.usage.quota).toBeNull();
+    expect(result.usage.quota).toEqual({ used: 1, limit: 10, period: 'month' });
   });
 
   it('rejects provider output that does not match the review schema', async () => {

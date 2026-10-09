@@ -60,7 +60,7 @@ describe('POST /api/ai/chat', () => {
     expect(body.provider).toBe('mock');
     expect(body.promptVersion).toBe('chat/v1');
     expect(body.requestId).toBe(res.headers['x-request-id']);
-    expect(body.usage.quota).toBeNull();
+    expect(body.usage.quota).toEqual({ used: 1, limit: 30, period: 'month' });
     expect(body.usage.inputTokens).toBeGreaterThan(0);
   });
 
@@ -156,8 +156,14 @@ describe('POST /api/ai/chat', () => {
 
   it('returns 429 USAGE_LIMIT_REACHED when the usage guard says no', async () => {
     const denyAll: UsageGuard = {
-      check: async () => ({ allowed: false }),
-      record: async () => {},
+      check: async () => ({
+        allowed: false,
+        quota: { used: 5, limit: 5, period: 'month' },
+        resetsAt: '2026-11-01T00:00:00.000Z',
+      }),
+      record: async () => {
+        throw new Error('must not record a refused call');
+      },
     };
     const { provider, inputs } = recordingProvider();
     const { app } = buildTestApp({ usageGuard: denyAll, aiProvider: provider });

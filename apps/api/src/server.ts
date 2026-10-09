@@ -8,7 +8,6 @@ import { parseEnv } from './config/env.js';
 import { createLogger } from './lib/logger.js';
 import { createUserDataClientFactory } from './lib/supabase.js';
 import { createAIProvider } from './services/ai/providers/index.js';
-import { noopUsageGuard } from './services/usage/noopUsageGuard.js';
 
 const SHUTDOWN_GRACE_MS = 10_000;
 
@@ -35,6 +34,7 @@ const app = createApp({
     rateLimitIp: { max: env.RATE_LIMIT_IP_MAX, windowMs: env.RATE_LIMIT_IP_WINDOW_MS },
     rateLimitAi: { max: env.RATE_LIMIT_AI_MAX, windowMs: env.RATE_LIMIT_AI_WINDOW_MS },
     trustProxy: env.TRUST_PROXY,
+    realAiUserIds: env.AI_REAL_PROVIDER_USER_IDS,
   },
   logger,
   tokenVerifier: createJwksVerifier({ supabaseUrl: env.SUPABASE_URL }),
@@ -42,12 +42,27 @@ const app = createApp({
     supabaseUrl: env.SUPABASE_URL,
     publishableKey: env.SUPABASE_PUBLISHABLE_KEY,
   }),
-  aiProvider: createAIProvider(env.AI_PROVIDER),
-  usageGuard: noopUsageGuard,
+  aiProvider: createAIProvider(
+    env.AI_PROVIDER === 'gemini' && env.GEMINI_API_KEY && env.AI_MODEL
+      ? { provider: 'gemini', apiKey: env.GEMINI_API_KEY, model: env.AI_MODEL }
+      : { provider: 'mock' },
+  ),
 });
 
 const server = app.listen(env.PORT, () => {
-  logger.info({ port: env.PORT, version, aiProvider: env.AI_PROVIDER }, 'api listening');
+  logger.info(
+    {
+      port: env.PORT,
+      version,
+      aiProvider: env.AI_PROVIDER,
+      aiModel: env.AI_MODEL,
+      realAiUsers: env.AI_REAL_PROVIDER_USER_IDS.length,
+    },
+    'api listening',
+  );
+  if (env.AI_PROVIDER !== 'mock' && env.AI_REAL_PROVIDER_USER_IDS.length === 0) {
+    logger.warn('AI_REAL_PROVIDER_USER_IDS is empty: every user gets the mock provider');
+  }
 });
 server.headersTimeout = 15_000;
 server.requestTimeout = 60_000;

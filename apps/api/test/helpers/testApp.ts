@@ -2,10 +2,9 @@ import { createApp, type AppConfig, type AppDeps } from '../../src/app.js';
 import { createJwksVerifier } from '../../src/auth/jwksVerifier.js';
 import { createLogger } from '../../src/lib/logger.js';
 import { createMockProvider } from '../../src/services/ai/providers/mock.provider.js';
-import { noopUsageGuard } from '../../src/services/usage/noopUsageGuard.js';
 
 import { captureLogs } from './captureLogs.js';
-import { createFakeSupabase } from './fakeSupabase.js';
+import { createFakeSupabase, type FakeSupabaseOptions } from './fakeSupabase.js';
 import { jwksFetch, TEST_SUPABASE_URL } from './keys.js';
 
 export const testConfig: AppConfig = {
@@ -16,14 +15,18 @@ export const testConfig: AppConfig = {
   rateLimitIp: { max: 1_000, windowMs: 60_000 },
   rateLimitAi: { max: 1_000, windowMs: 60_000 },
   trustProxy: 0,
+  realAiUserIds: [],
 };
 
-type Overrides = Partial<Omit<AppDeps, 'config' | 'logger'>> & { config?: Partial<AppConfig> };
+type Overrides = Partial<Omit<AppDeps, 'config' | 'logger'>> & {
+  config?: Partial<AppConfig>;
+  supabase?: FakeSupabaseOptions;
+};
 
-/** The real app with in-memory dependencies: local JWKS, fake Supabase, mock AI. */
+/** The real app with in-memory dependencies: local JWKS, fake Supabase (with usage), mock AI. */
 export function buildTestApp(overrides: Overrides = {}) {
   const logs = captureLogs();
-  const supabase = createFakeSupabase();
+  const supabase = createFakeSupabase(overrides.supabase);
   const app = createApp({
     config: { ...testConfig, ...overrides.config },
     logger: createLogger({ level: 'debug', destination: logs.destination }),
@@ -32,7 +35,7 @@ export function buildTestApp(overrides: Overrides = {}) {
       createJwksVerifier({ supabaseUrl: TEST_SUPABASE_URL, fetchImpl: jwksFetch }),
     createUserClient: overrides.createUserClient ?? supabase.factory,
     aiProvider: overrides.aiProvider ?? createMockProvider(),
-    usageGuard: overrides.usageGuard ?? noopUsageGuard,
+    ...(overrides.usageGuard ? { usageGuard: overrides.usageGuard } : {}),
   });
   return { app, logs, supabase };
 }

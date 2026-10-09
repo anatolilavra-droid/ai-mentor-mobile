@@ -29,7 +29,7 @@ export const chatRequestSchema = z
 
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 
-/** Usage reported with every AI answer. `quota` stays null until usage counters exist. */
+/** Usage reported with every AI answer: tokens of this call and the monthly quota after it. */
 export const usageSchema = z
   .object({
     inputTokens: z.number().int().nonnegative(),
@@ -40,8 +40,7 @@ export const usageSchema = z
         limit: z.number().int().nonnegative(),
         period: z.literal('month'),
       })
-      .strict()
-      .nullable(),
+      .strict(),
   })
   .strict();
 
@@ -50,7 +49,7 @@ export type Usage = z.infer<typeof usageSchema>;
 export const chatResponseSchema = z
   .object({
     answer: z.string().min(1),
-    provider: z.literal('mock'),
+    provider: z.enum(['mock', 'gemini']),
     promptVersion: z.string(),
     requestId: z.string(),
     usage: usageSchema,

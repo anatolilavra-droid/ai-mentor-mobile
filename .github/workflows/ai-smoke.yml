@@ -1,0 +1,52 @@
+# Manual check of the real AI provider (Gemini, free tier) from a phone.
+#
+# Required repository secret (Settings → Secrets and variables → Actions → Secrets):
+#   GEMINI_API_KEY   created in Google AI Studio. A secret, never a variable.
+#
+# Run with an empty "model" first: the summary lists the models this key can use.
+# Then run again with one of those ids. Only fixed sample content is sent, no user data.
+
+name: AI smoke test
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Gemini model id (leave empty to list available models)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Call Gemini with a fixed question and code review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run the smoke test
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          AI_MODEL: ${{ inputs.model }}
+        run: pnpm --filter @ai-mentor/api ai:smoke

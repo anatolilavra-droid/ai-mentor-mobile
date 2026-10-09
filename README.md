@@ -4,12 +4,14 @@ A premium, dark-first mobile AI mentor for beginner and junior developers:
 learn programming, understand errors, review code, follow a personal
 learning plan, and keep projects and useful answers in one place.
 
-> **Status:** Phase 4 — AI Backend Foundation completed. Email and password accounts
-> (Supabase Auth), secure session storage, protected routes, a guided
-> onboarding flow, a technologies catalog and "Personalize your mentor". The
-> interface is available in English, Russian and German. The backend
-> (`apps/api`) verifies Supabase sessions and runs the AI pipeline with a mock
-> provider; a real AI provider, hosting and payments are not connected yet.
+> **Status:** Phase 5a — AI usage limits and Gemini (testing). Email and
+> password accounts (Supabase Auth), secure session storage, protected routes,
+> a guided onboarding flow, a technologies catalog and "Personalize your
+> mentor". The interface is available in English, Russian and German. The
+> backend (`apps/api`) verifies Supabase sessions, enforces monthly Free/Pro AI
+> limits and runs the AI pipeline with a mock provider, or Gemini (free tier)
+> for the developer's own account. Hosting, the chat screen and payments are
+> not connected yet.
 
 ## Tech stack
 
@@ -101,7 +103,8 @@ pnpm check          # all of the above
 ```
 
 The **API checks** workflow runs the backend checks on GitHub for every push
-that touches `apps/api`. To run the backend locally, see
+that touches `apps/api`. The manual **AI smoke test** workflow calls Gemini with
+a fixed question (see [`apps/api/README.md`](apps/api/README.md)). To run the backend locally, see
 [`apps/api/README.md`](apps/api/README.md).
 
 ## Design system

@@ -10,6 +10,15 @@ export const errorResponseSchema = z
         message: z.string(),
         requestId: z.string(),
         details: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
+        quota: z
+          .object({
+            feature: z.enum(['chat', 'code_review']),
+            used: z.number().int().nonnegative(),
+            limit: z.number().int().nonnegative(),
+            resetsAt: z.string(),
+          })
+          .strict()
+          .optional(),
       })
       .strict(),
   })

@@ -4,9 +4,13 @@ The backend for AI Mentor Mobile. It verifies the user's Supabase session,
 validates every request with Zod, checks usage, builds a versioned prompt,
 calls an AI provider and validates the answer before returning it.
 
-Phase 4 runs with a **mock AI provider** only: no external AI API is called
-and no AI key exists anywhere. A real provider and hosting arrive in Phase 5
-(see [`DEPLOYMENT.md`](DEPLOYMENT.md)).
+The default provider is a **mock**: no external AI API is called and no key
+is needed. **Gemini** (free tier) can be switched on for testing only: it
+answers only the user ids in `AI_REAL_PROVIDER_USER_IDS`, everyone else keeps
+the mock, because free-tier requests may be used by Google. A paid provider
+and hosting come later (see [`DEPLOYMENT.md`](DEPLOYMENT.md)).
+
+Monthly AI limits (Free / Pro) are enforced on the server from the database.
 
 ## Run locally
 
@@ -31,11 +35,13 @@ secret or a real AI key in `.env.example` or in code.
 
 ## Endpoints
 
-| Method | Path           | Auth | Description                                    |
-| ------ | -------------- | ---- | ---------------------------------------------- |
-| GET    | `/health`      | no   | Liveness: `{ status, version, uptimeSeconds }` |
-| GET    | `/api/me`      | yes  | The signed-in user's own profile (via RLS)     |
-| POST   | `/api/ai/chat` | yes  | AI mentor answer (mock provider in Phase 4)    |
+| Method | Path                | Auth | Description                                          |
+| ------ | ------------------- | ---- | ---------------------------------------------------- |
+| GET    | `/health`           | no   | Liveness: `{ status, version, uptimeSeconds }`       |
+| GET    | `/api/me`           | yes  | The signed-in user's own profile (via RLS)           |
+| GET    | `/api/usage`        | yes  | Own plan, period and monthly usage per feature       |
+| GET    | `/api/subscription` | yes  | Own plan and status (no row means Free)              |
+| POST   | `/api/ai/chat`      | yes  | AI mentor answer (mock, or Gemini for allowed users) |
 
 Authenticated requests send `Authorization: Bearer <Supabase access token>`.
 
@@ -65,11 +71,35 @@ Response:
   "provider": "mock",
   "promptVersion": "chat/v1",
   "requestId": "…",
-  "usage": { "inputTokens": 120, "outputTokens": 40, "quota": null }
+  "usage": {
+    "inputTokens": 120,
+    "outputTokens": 40,
+    "quota": { "used": 3, "limit": 30, "period": "month" }
+  }
 }
 ```
 
-`usage.quota` stays `null` until usage counters exist (Phase 5).
+`provider` is `"gemini"` for users in `AI_REAL_PROVIDER_USER_IDS` when Gemini is on.
+`usage.quota` is the monthly quota after this answer. Only successful answers
+are counted.
+
+### GET /api/usage
+
+```json
+{
+  "plan": "free",
+  "period": { "start": "2026-10-01", "end": "2026-11-01" },
+  "features": { "chat": { "used": 3, "limit": 30 }, "code_review": { "used": 0, "limit": 10 } }
+}
+```
+
+### GET /api/subscription
+
+```json
+{ "plan": "free", "status": "active" }
+```
+
+A canceled subscription reports `plan: "free"`, the limits it actually gets.
 
 ### Errors
 
@@ -81,6 +111,8 @@ the `X-Request-Id` header):
 ```
 
 `details` (field path and message) is added only for `VALIDATION_ERROR`.
+`USAGE_LIMIT_REACHED` adds `quota`:
+`{ "feature": "chat", "used": 30, "limit": 30, "resetsAt": "2026-11-01T00:00:00.000Z" }`.
 
 | Code                     | HTTP |
 | ------------------------ | ---- |
@@ -124,6 +156,16 @@ helmet → request id + log → abort signal → request timeout → per-IP limi
   per-user limit on AI routes. Both are in memory (one instance).
 - **Timeouts**: JWKS and Supabase 5 s, AI call `AI_TIMEOUT_MS`, whole request
   `REQUEST_TIMEOUT_MS`. A timeout or a client disconnect aborts the AI call.
+- **Usage and plans**: before an AI call the API reads the caller's quota with
+  `get_my_ai_quotas()`; after a successful answer it calls
+  `record_my_ai_usage()`. Both run as the user (no service key) and touch only
+  that user's counters. If the quota cannot be read, the request fails with
+  503 instead of allowing unlimited use. Concurrent requests from one user can
+  exceed the limit by one or two (bounded by the per-user rate limit).
+- **Providers**: `src/services/ai/providers/`. `mock` needs nothing; `gemini`
+  uses the official `@google/genai` SDK with the key from the environment, no
+  automatic retries, and maps errors to provider-neutral kinds. Users outside
+  `AI_REAL_PROVIDER_USER_IDS` always get the mock.
 - **Prompts**: `src/prompts/<feature>/v<N>.ts`. A published version is never
   edited: changes go into a new version and `src/prompts/registry.ts` points to
   it. User text is passed as delimited data, never inside the system prompt.
@@ -135,7 +177,19 @@ helmet → request id + log → abort signal → request timeout → per-IP limi
 See [`.env.example`](.env.example). The environment is validated at start-up;
 the server exits and names the invalid variables (never their values).
 `EXPO_PUBLIC_*` variables are refused, and the mock provider is refused when
-`NODE_ENV=production`.
+`NODE_ENV=production`. `AI_PROVIDER=gemini` requires `GEMINI_API_KEY` and `AI_MODEL`.
+
+## AI smoke test (from a phone)
+
+GitHub → Actions → **AI smoke test** → Run workflow:
+
+1. Once: add the repository **secret** `GEMINI_API_KEY` (Settings → Secrets
+   and variables → Actions → Secrets). Never a variable, never in chat.
+2. Run with an empty `model`: the run summary lists the model ids the key can use.
+3. Run again with one id: the summary shows a real answer to a fixed question
+   and a schema-checked code review, with latency and token counts.
+
+Only fixed sample content is sent. The key is never printed.
 
 ## Structure
 

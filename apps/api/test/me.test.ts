@@ -65,7 +65,7 @@ describe('GET /api/me', () => {
       expect(res.status).toBe(200);
       expect(res.body.userId).toBe(USER_B);
       expect(supabase.accessTokens).toEqual([token]);
-      expect(supabase.filters).toEqual([{ column: 'id', value: USER_B }]);
+      expect(supabase.filters).toEqual([{ table: 'profiles', column: 'id', value: USER_B }]);
     });
 
     it('does not accept a user id from the client', async () => {

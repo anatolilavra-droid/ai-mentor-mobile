@@ -1,21 +1,25 @@
 import type { Usage } from '../../schemas/chat.schema.js';
 
-export type UsageFeature = 'chat' | 'code_review' | 'learning_plan' | 'project_breakdown';
+/** Features with a monthly limit (plan_limits in the database). */
+export type UsageFeature = 'chat' | 'code_review';
 
-export type Quota = NonNullable<Usage['quota']>;
+export type Quota = Usage['quota'];
 
-export type UsageDecision = { allowed: true; quota: Quota | null } | { allowed: false };
+export type UsageDecision =
+  { allowed: true; quota: Quota } | { allowed: false; quota: Quota; resetsAt: string };
+
+/** Who is asking. The token makes every database call run as this user (RLS). */
+export type UsageCaller = { userId: string; accessToken: string; signal: AbortSignal };
 
 /**
- * Plan and usage check before every AI call. The plan always comes from the
- * database (Phase 5), never from the client.
+ * Plan and usage check around every AI call. The plan always comes from the
+ * database, never from the client.
  */
 export interface UsageGuard {
-  check(input: { userId: string; feature: UsageFeature }): Promise<UsageDecision>;
-  record(input: {
-    userId: string;
-    feature: UsageFeature;
-    inputTokens: number;
-    outputTokens: number;
-  }): Promise<void>;
+  /** Reads the caller's quota for a feature before the AI call. */
+  check(input: UsageCaller & { feature: UsageFeature }): Promise<UsageDecision>;
+  /** Counts one successful AI call and returns the new quota. */
+  record(
+    input: UsageCaller & { feature: UsageFeature; inputTokens: number; outputTokens: number },
+  ): Promise<Quota>;
 }

@@ -3,7 +3,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 const SUPABASE_TIMEOUT_MS = 5_000;
 
 /** The part of the Supabase client the API uses. Keeps test fakes small. */
-export type UserDataClient = Pick<SupabaseClient, 'from'>;
+export type UserDataClient = Pick<SupabaseClient, 'from' | 'rpc'>;
 
 /** Creates a Supabase client that acts as one signed-in user. */
 export type UserDataClientFactory = (accessToken: string) => UserDataClient;

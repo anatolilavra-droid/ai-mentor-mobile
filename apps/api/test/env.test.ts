@@ -70,3 +70,53 @@ describe('parseEnv', () => {
     expect(parseEnv({ ...valid, [name]: value }).ok).toBe(false);
   });
 });
+
+describe('parseEnv: AI provider settings', () => {
+  const gemini = {
+    ...valid,
+    AI_PROVIDER: 'gemini',
+    GEMINI_API_KEY: 'gemini-test-key-not-real',
+    AI_MODEL: 'gemini-test-flash',
+  };
+
+  it('accepts a complete Gemini configuration and parses the allowlist', () => {
+    const result = parseEnv({
+      ...gemini,
+      AI_REAL_PROVIDER_USER_IDS: ' 11111111-1111-4111-8111-111111111111 , ',
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.env.AI_REAL_PROVIDER_USER_IDS).toEqual(['11111111-1111-4111-8111-111111111111']);
+  });
+
+  it('defaults to an empty allowlist', () => {
+    const result = parseEnv(gemini);
+    expect(result.ok && result.env.AI_REAL_PROVIDER_USER_IDS).toEqual([]);
+  });
+
+  it('requires a key and a model for Gemini, naming them without values', () => {
+    const result = parseEnv({ ...valid, AI_PROVIDER: 'gemini' });
+
+    expect(result).toEqual({
+      ok: false,
+      problems: ['GEMINI_API_KEY: is required for gemini', 'AI_MODEL: is required for gemini'],
+    });
+  });
+
+  it.each([
+    ['AI_REAL_PROVIDER_USER_IDS', 'not-a-uuid'],
+    ['AI_MODEL', 'Gemini Flash!'],
+  ])('rejects an invalid %s', (name, value) => {
+    expect(parseEnv({ ...gemini, [name]: value }).ok).toBe(false);
+  });
+
+  it('never prints the Gemini key in problems', () => {
+    const result = parseEnv({
+      ...gemini,
+      AI_MODEL: '!',
+      GEMINI_API_KEY: 'gemini-secret-value-123456',
+    });
+    expect(JSON.stringify(result)).not.toContain('gemini-secret-value');
+  });
+});

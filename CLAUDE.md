@@ -635,9 +635,30 @@ Phase 4 rules (keep them):
   API, no hosting choice. The API refuses AI_PROVIDER=mock in production.
 - Prompts are versioned in apps/api/src/prompts/<feature>/v<N>.ts; a
   published version is never edited.
-- The usage check is a placeholder (noopUsageGuard) until subscriptions and
-  usage_counters exist.
-- apps/api/DEPLOYMENT.md lists what Phase 5 must decide and provide.
+- apps/api/DEPLOYMENT.md lists what later phases must decide and provide.
+
+Phase 5 is split because there is no payment method yet:
+- 5a: server-side Free/Pro limits and a Gemini free-tier adapter for testing;
+- 5b: hosting without a payment card and the real chat screen in the app;
+- 5c: a paid AI provider and opening AI to real users.
+
+Phase 5a: AI usage limits and Gemini (testing) — implemented, waiting for
+Anatoliy's review.
+- plan_limits, subscriptions and usage_counters with RLS
+  (supabase/migrations/20261020000000_ai_usage.sql, tests/rls_usage.sql).
+  Free: 30 chat + 10 code reviews per month; Pro: 500 + 200 (placeholders,
+  changed in plan_limits without a release). Pro is set manually (mock Pro).
+- The API reads the quota with get_my_ai_quotas() and counts only successful
+  answers with record_my_ai_usage(); both run as the user, no service role.
+  If the quota cannot be read, AI requests fail closed (503).
+- GET /api/usage and GET /api/subscription return only the caller's data.
+- AI_PROVIDER=mock (default) or gemini. The Gemini free tier may use requests
+  to improve Google products, so only AI_REAL_PROVIDER_USER_IDS (Anatoliy's
+  own account) reach Gemini; everyone else gets the mock. Never widen this
+  list on a free tier.
+- GEMINI_API_KEY lives only in env / the GitHub secret of the manual
+  "AI smoke test" workflow. The model id comes from that workflow's listing,
+  never guessed.
 
 Next phase: not defined yet — wait for Anatoliy's instructions.
 

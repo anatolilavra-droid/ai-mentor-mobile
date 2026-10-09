@@ -58,6 +58,7 @@ Each file should end with `Success`.
 | `20261012000000_onboarding_profile_columns.sql` | Phase 3: `primary_goal`, `custom_goal_details`, `onboarding_completed`; Edit profile may change only name, minutes and language |
 | `20261012000100_technologies.sql`               | Phase 3: `technologies` catalog (seeded), `user_technologies` (1–8 per user, unique), RLS                                       |
 | `20261012000200_onboarding_functions.sql`       | Phase 3: `complete_onboarding`, `save_personalization`, `skip_onboarding` (one transaction each)                                |
+| `20261020000000_ai_usage.sql`                   | Phase 5a: `plan_limits`, `subscriptions`, `usage_counters`, `get_my_ai_quotas`, `record_my_ai_usage`; monthly AI limits, RLS    |
 
 If you signed up in the app before applying the first migration, the second one
 creates your missing profile. Without it the app shows "Your profile could not load".
@@ -87,6 +88,28 @@ Expected result: `RLS profiles: all checks passed`. The script rolls back, so it
 After the Phase 3 migrations, also run `tests/rls_onboarding.sql`.
 Expected result: `RLS onboarding: all checks passed`.
 
+After the Phase 5a migration, run `tests/rls_usage.sql`.
+Expected result: no error (the editor may show only `Success. No rows returned`,
+because the script ends with a rollback).
+
+## 6. Plans and AI limits
+
+Monthly limits live in `plan_limits` and can be changed without an app release:
+
+```sql
+update public.plan_limits set monthly_limit = 40 where plan = 'free' and feature = 'chat';
+```
+
+There are no payments yet. To give an account Pro for testing (mock Pro mode),
+find its id in Authentication → Users and run:
+
+```sql
+insert into public.subscriptions (user_id, plan) values ('<user id>', 'pro')
+on conflict (user_id) do update set plan = 'pro', status = 'active';
+```
+
+Back to Free: `update public.subscriptions set status = 'canceled' where user_id = '<user id>';`
+
 Quick check without the full test:
 
 ```sql
@@ -97,7 +120,7 @@ select
 
 Expected: `policies = 2`, `rls_on = true`.
 
-## 6. Keys for the app
+## 7. Keys for the app
 
 Project Settings → API (or API Keys):
 

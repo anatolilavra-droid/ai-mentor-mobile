@@ -18,6 +18,8 @@ export type CodeReviewInput = {
   messages: ChatMessage[];
   language: CodeLanguage;
   task: CodeReviewTask;
+  /** JSON Schema of the expected output, for providers that can constrain their answer. */
+  outputJsonSchema: unknown;
   maxOutputTokens: number;
   signal: AbortSignal;
 };
@@ -47,7 +49,7 @@ export const codeReviewResultSchema = z.object({
 });
 export type CodeReviewResult = z.infer<typeof codeReviewResultSchema>;
 
-export type AIProviderName = 'mock';
+export type AIProviderName = 'mock' | 'gemini';
 
 export interface AIProvider {
   readonly name: AIProviderName;

@@ -1,8 +1,8 @@
-# Deployment notes (for Phase 5)
+# Deployment notes
 
-Phase 4 does not deploy the API and does not choose a hosting provider or an
-AI provider. These notes list what the deployment must provide, so the choice
-in Phase 5 can be checked against them.
+The API is not deployed yet (Phase 5b) and no paid AI provider is chosen
+(Phase 5c). These notes list what the deployment must provide, so the choices
+can be checked against them.
 
 ## Runtime requirements
 
@@ -25,20 +25,24 @@ in Phase 5 can be checked against them.
   store, never committed.
 - `NODE_ENV=production` refuses `AI_PROVIDER=mock`: a real provider must be
   configured before production.
-- `AI_API_KEY` (added with the first real provider) lives only on the server.
-  It must never appear in the mobile app, in `EXPO_PUBLIC_*` variables, in CI
-  logs or in GitHub variables used by the APK build.
-- Do not add the Supabase `service_role` key unless a feature truly needs it
-  (for example writing usage counters); prefer `security definer` functions.
+- AI keys (`GEMINI_API_KEY` today) live only on the server and in the
+  `GEMINI_API_KEY` GitHub **secret** used by the manual smoke test. They must
+  never appear in the mobile app, in `EXPO_PUBLIC_*` variables, in logs or in
+  GitHub variables.
+- While the provider runs on a **free tier**, keep `AI_REAL_PROVIDER_USER_IDS`
+  limited to the developers' own accounts: free-tier requests may be used and
+  reviewed by the provider. Open AI to real users only on a paid tier.
+- The service role key is not needed: usage is recorded through
+  `record_my_ai_usage()`, which runs as the calling user.
 
 ## Checklist before the first deployment
 
-- [ ] Choose and add the real AI provider adapter behind `AIProvider`
-      (wrap its errors in `AIProviderError`, honour the abort signal).
-- [ ] Add `subscriptions` and `usage_counters` with RLS and replace
-      `noopUsageGuard` with a database-backed guard (plan from the database only).
-- [ ] Decide the Free limits on the server (30 chat messages and 10 code
-      reviews per month per CLAUDE.md) and return `USAGE_LIMIT_REACHED`.
+- [x] Provider abstraction with a real adapter (Gemini, free tier, testing only).
+- [x] `subscriptions`, `usage_counters` and `plan_limits` with RLS; limits
+      enforced on the server; `USAGE_LIMIT_REACHED` with quota details.
+- [ ] Choose a host that needs no payment card, or add payment (Phase 5b).
+- [ ] Choose the paid provider for real users after a blind quality test,
+      then widen access (Phase 5c).
 - [ ] When `conversations` exists, check that `conversationId` belongs to the
       user (RLS) before reading or writing messages.
 - [ ] Add `EXPO_PUBLIC_API_URL` to the mobile app and the APK workflow variables.

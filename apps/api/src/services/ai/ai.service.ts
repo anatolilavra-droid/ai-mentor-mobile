@@ -1,4 +1,5 @@
 import type { Logger } from 'pino';
+import { z } from 'zod';
 
 import { AppError } from '../../errors/AppError.js';
 import { prompts } from '../../prompts/registry.js';
@@ -7,7 +8,7 @@ import type { ChatContext, ChatRequest, ChatResponse } from '../../schemas/chat.
 import type { CodeReviewOutput, CodeReviewRequest } from '../../schemas/code-review.schema.js';
 import type { ProfileRow } from '../../schemas/me.schema.js';
 import type { ProfileService } from '../profile.service.js';
-import type { UsageFeature, UsageGuard } from '../usage/UsageGuard.js';
+import type { Quota, UsageFeature, UsageGuard } from '../usage/UsageGuard.js';
 
 import { toAppError } from './ai.errors.js';
 import {
@@ -35,7 +36,8 @@ export type AIService = {
 };
 
 export type AIServiceDeps = {
-  provider: AIProvider;
+  /** The provider for this user (a real one only for allowed users, otherwise the mock). */
+  selectProvider: (userId: string) => AIProvider;
   usageGuard: UsageGuard;
   profileService: ProfileService;
   aiTimeoutMs: number;
@@ -46,24 +48,37 @@ export type AIServiceDeps = {
  * timeout) → output validation → usage record. Controllers only map HTTP.
  */
 export function createAIService(deps: AIServiceDeps): AIService {
-  const { provider, usageGuard, profileService, aiTimeoutMs } = deps;
+  const { selectProvider, usageGuard, profileService, aiTimeoutMs } = deps;
+  const codeReviewJsonSchema = z.toJSONSchema(prompts.codeReview.outputSchema);
 
-  async function checkUsage(call: AICall, feature: UsageFeature) {
-    const decision = await usageGuard.check({ userId: call.userId, feature });
-    if (!decision.allowed) throw new AppError('USAGE_LIMIT_REACHED');
+  async function checkUsage(call: AICall, feature: UsageFeature): Promise<Quota> {
+    const decision = await usageGuard.check({ ...call, feature });
+    if (!decision.allowed) {
+      throw new AppError('USAGE_LIMIT_REACHED', {
+        quota: {
+          feature,
+          used: decision.quota.used,
+          limit: decision.quota.limit,
+          resetsAt: decision.resetsAt,
+        },
+      });
+    }
     return decision.quota;
   }
 
+  /** Counts a successful call. Usage is recorded only after the AI answered. */
   async function recordUsage(
     call: AICall,
     feature: UsageFeature,
     usage: { inputTokens: number; outputTokens: number },
-  ) {
+    quotaBefore: Quota,
+  ): Promise<Quota> {
     try {
-      await usageGuard.record({ userId: call.userId, feature, ...usage });
+      return await usageGuard.record({ ...call, feature, ...usage });
     } catch (error) {
       // The answer is already generated; a failed record must not hide it.
       call.log.error({ err: error, feature }, 'usage record failed');
+      return quotaBefore;
     }
   }
 
@@ -96,6 +111,7 @@ export function createAIService(deps: AIServiceDeps): AIService {
   /** Runs one provider call with the AI timeout and the request's abort signal. */
   async function callProvider<T>(
     call: AICall,
+    provider: AIProvider,
     promptRef: string,
     run: (signal: AbortSignal) => Promise<T>,
   ): Promise<T> {
@@ -120,6 +136,7 @@ export function createAIService(deps: AIServiceDeps): AIService {
 
   function logSuccess(
     call: AICall,
+    provider: AIProvider,
     promptRef: string,
     model: string,
     usage: { inputTokens: number; outputTokens: number },
@@ -142,12 +159,13 @@ export function createAIService(deps: AIServiceDeps): AIService {
   return {
     async chat(call, request) {
       const quota = await checkUsage(call, 'chat');
+      const provider = selectProvider(call.userId);
       const learner = resolveLearner(await loadProfile(call), request.context);
       const prompt = prompts.chat;
       const { system, messages } = prompt.build({ message: request.message }, learner);
 
       const startedAt = performance.now();
-      const raw = await callProvider(call, prompt.ref, (signal) =>
+      const raw = await callProvider(call, provider, prompt.ref, (signal) =>
         provider.generateText({
           system,
           messages,
@@ -158,29 +176,31 @@ export function createAIService(deps: AIServiceDeps): AIService {
       const result = generateTextResultSchema.safeParse(raw);
       if (!result.success) throw new AppError('AI_INVALID_RESPONSE', { cause: result.error });
 
-      logSuccess(call, prompt.ref, result.data.model, result.data.usage, startedAt);
-      await recordUsage(call, 'chat', result.data.usage);
+      logSuccess(call, provider, prompt.ref, result.data.model, result.data.usage, startedAt);
+      const quotaAfter = await recordUsage(call, 'chat', result.data.usage, quota);
       return {
         answer: result.data.text,
         provider: provider.name,
         promptVersion: prompt.ref,
-        usage: { ...result.data.usage, quota },
+        usage: { ...result.data.usage, quota: quotaAfter },
       };
     },
 
     async reviewCode(call, request) {
       const quota = await checkUsage(call, 'code_review');
+      const provider = selectProvider(call.userId);
       const learner = resolveLearner(await loadProfile(call));
       const prompt = prompts.codeReview;
       const { system, messages } = prompt.build(request, learner);
 
       const startedAt = performance.now();
-      const raw = await callProvider(call, prompt.ref, (signal) =>
+      const raw = await callProvider(call, provider, prompt.ref, (signal) =>
         provider.reviewCode({
           system,
           messages,
           language: request.language,
           task: request.task,
+          outputJsonSchema: codeReviewJsonSchema,
           maxOutputTokens: prompt.maxOutputTokens,
           signal,
         }),
@@ -190,13 +210,13 @@ export function createAIService(deps: AIServiceDeps): AIService {
       const review = prompt.outputSchema.safeParse(result.data.output);
       if (!review.success) throw new AppError('AI_INVALID_RESPONSE', { cause: review.error });
 
-      logSuccess(call, prompt.ref, result.data.model, result.data.usage, startedAt);
-      await recordUsage(call, 'code_review', result.data.usage);
+      logSuccess(call, provider, prompt.ref, result.data.model, result.data.usage, startedAt);
+      const quotaAfter = await recordUsage(call, 'code_review', result.data.usage, quota);
       return {
         review: review.data,
         provider: provider.name,
         promptVersion: prompt.ref,
-        usage: { ...result.data.usage, quota },
+        usage: { ...result.data.usage, quota: quotaAfter },
       };
     },
   };
