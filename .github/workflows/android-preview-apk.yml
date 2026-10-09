@@ -26,7 +26,8 @@ jobs:
     env:
       EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
       EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
-      NODE_ENV: production
+      # No NODE_ENV=production here: it breaks Jest (React's production build has no act()).
+      # The Gradle release build bundles JavaScript in production mode on its own.
 
     steps:
       - name: Check required variables
