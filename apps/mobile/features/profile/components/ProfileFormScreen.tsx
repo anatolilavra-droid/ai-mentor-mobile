@@ -143,7 +143,6 @@ export function ProfileFormScreen({
               value={field.value}
               onChange={field.onChange}
               error={errorText(fieldState.error?.message)}
-              hint={field.value === 'en' ? undefined : t('profileForm.languageHint')}
               options={UI_LANGUAGES.map((language) => ({
                 value: language,
                 label: t(`profileForm.languages.${language}`),

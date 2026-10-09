@@ -1,0 +1,401 @@
+{
+  "common": {
+    "comingSoon": "Bald verfügbar",
+    "comingInUpdate": "Kommt mit einem späteren Update",
+    "loading": "Wird geladen",
+    "retry": "Erneut versuchen",
+    "backHome": "Zur Startseite",
+    "error": {
+      "title": "Da ist etwas schiefgelaufen",
+      "message": "Dieser Bildschirm konnte nicht geladen werden. Deine Daten sind sicher — versuch es gleich noch einmal."
+    },
+    "continue": "Weiter",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "optional": "Optional",
+    "showPassword": "Passwort anzeigen",
+    "hidePassword": "Passwort verbergen",
+    "config": {
+      "title": "Konfiguration fehlt",
+      "message": "Diesem Build fehlen die Supabase-Einstellungen, daher ist keine Anmeldung möglich. Trage die Werte aus .env.example ein und baue die App neu.",
+      "missing": "Fehlt: {{names}}"
+    },
+    "profileError": {
+      "title": "Dein Profil konnte nicht geladen werden",
+      "message": "Prüfe deine Verbindung und versuch es noch einmal."
+    }
+  },
+  "tabs": {
+    "home": "Start",
+    "learn": "Lernen",
+    "chat": "Chat",
+    "projects": "Projekte",
+    "profile": "Profil",
+    "a11yHint": "Öffnet den Tab „{{label}}“"
+  },
+  "home": {
+    "eyebrow": "Heute · {{date}}",
+    "greeting": {
+      "morning": "Guten Morgen, {{name}}.",
+      "afternoon": "Guten Tag, {{name}}.",
+      "evening": "Guten Abend, {{name}}.",
+      "night": "Immer noch am Coden, {{name}}?"
+    },
+    "subtitle": "Ein klarer Schritt nach vorn reicht für heute.",
+    "nextStep": {
+      "label": "Nächster Schritt",
+      "progress": "{{percent}} % von {{track}}",
+      "lessonsLeft_one": "Noch {{count}} Lektion",
+      "lessonsLeft_other": "Noch {{count}} Lektionen",
+      "progressA11y": "Fortschritt: {{percent}} Prozent"
+    },
+    "quickActions": {
+      "label": "Frag deinen Mentor",
+      "ask": {
+        "title": "Eine Frage stellen",
+        "subtitle": "Konzepte, erklärt auf deinem Niveau"
+      },
+      "explain": {
+        "title": "Meinen Code erklären",
+        "subtitle": "Zeile für Zeile, ohne Fachjargon"
+      },
+      "fix": {
+        "title": "Einen Fehler beheben",
+        "subtitle": "Die Ursache verstehen, nicht nur flicken"
+      }
+    },
+    "preview": {
+      "label": "Konzept des Tages"
+    },
+    "recent": {
+      "label": "Gespeicherte Antworten",
+      "emptyTitle": "Noch nichts gespeichert",
+      "emptyDescription": "Hilfreiche Antworten deines Mentors, die du speicherst, findest du hier."
+    },
+    "primaryAction": "Weiterlernen",
+    "loadingLabel": "Dein Tag wird geladen",
+    "greetingPlain": {
+      "morning": "Guten Morgen.",
+      "afternoon": "Guten Tag.",
+      "evening": "Guten Abend.",
+      "night": "Immer noch am Coden?"
+    },
+    "finishSetup": {
+      "label": "Einrichtung abschließen",
+      "title": "Stimme deinen Mentor ab",
+      "description": "Erzähl deinem Mentor von deinem Niveau, deinem Ziel und deinen Technologien. Das dauert etwa eine Minute.",
+      "action": "Einrichtung fortsetzen"
+    }
+  },
+  "learn": {
+    "eyebrow": "Lernpfad",
+    "title": "Lerne mit Absicht.",
+    "subtitle": "Ein persönlicher Plan, abgestimmt auf dein Niveau und die Minuten, die du wirklich hast.",
+    "emptyTitle": "Hier beginnt dein Plan",
+    "emptyDescription": "Bald macht dein Mentor aus einem Ziel Module, tägliche Aufgaben und Mini-Projekte.",
+    "previewLabel": "Was hier zu finden sein wird",
+    "preview": {
+      "plan": "Ein persönlicher Lernplan",
+      "tasks": "Tägliche Aufgaben zum Abhaken",
+      "progress": "Fortschritt, den du wirklich siehst"
+    },
+    "primaryAction": "Meinen Plan erstellen"
+  },
+  "chat": {
+    "eyebrow": "KI-Mentor",
+    "title": "Frag, was du willst.",
+    "subtitle": "Fragen, Code, Fehler — Schritt für Schritt beantwortet, mit kurzen Beispielen.",
+    "emptyTitle": "Dein Mentor ist fast da",
+    "emptyDescription": "Unterhaltungen erscheinen hier, sobald der Mentor verbunden ist.",
+    "previewLabel": "Was du fragen kannst",
+    "preview": {
+      "questions": "Programmierfragen auf deinem Niveau",
+      "explain": "Erklärungen zu echtem Code",
+      "fix": "Fehlerbehebungen mit Begründung"
+    },
+    "inputPlaceholder": "Frag zu Code, Fehlern, Konzepten…",
+    "inputA11y": "Nachrichtenfeld, kommt mit einem späteren Update",
+    "send": "Nachricht senden"
+  },
+  "projects": {
+    "eyebrow": "Arbeitsbereich",
+    "title": "Deine Projekte.",
+    "subtitle": "Halte Lernprojekte geordnet: Aufgaben, Notizen und der nächste Schritt.",
+    "emptyTitle": "Noch keine Projekte",
+    "emptyDescription": "Bald begleitest du jedes Projekt von der Idee bis zum Abschluss — mit einem Vorschlag für den nächsten Schritt.",
+    "previewLabel": "Was jedes Projekt enthält",
+    "preview": {
+      "tasks": "Aufgaben und Fortschritt",
+      "notes": "Notizen und gespeicherte Antworten",
+      "next": "Ein empfohlener nächster Schritt"
+    },
+    "primaryAction": "Neues Projekt"
+  },
+  "profile": {
+    "eyebrow": "Profil",
+    "planFree": "Free",
+    "preferences": "Einstellungen",
+    "language": "Sprache",
+    "languageValue": "Deutsch",
+    "languageHint": "Weitere Sprachen folgen",
+    "haptics": "Haptisches Feedback",
+    "hapticsHint": "Leichte Vibration beim Tippen",
+    "appearance": "Darstellung",
+    "appearanceValue": "Dunkel",
+    "about": "Über die App",
+    "version": "Version",
+    "plan": "Tarif",
+    "saved": "Einstellungen gespeichert",
+    "primaryAction": "Profil bearbeiten",
+    "learning": "Lernen",
+    "goal": "Ziel",
+    "goalEmpty": "Noch kein Ziel festgelegt",
+    "dailyMinutesValue": "{{count}} Min. pro Tag",
+    "account": "Konto",
+    "email": "E-Mail",
+    "personalization": "Personalisierung",
+    "personalize": "Mentor personalisieren",
+    "personalizeHint": "Niveau, Ziel und Technologien",
+    "notSet": "Noch nicht festgelegt",
+    "unnamed": "Dein Profil",
+    "technologiesLoading": "Technologien werden geladen",
+    "technologiesError": "Technologien konnten nicht geladen werden."
+  },
+  "notFound": {
+    "eyebrow": "404",
+    "title": "Verlaufen in der Codebasis.",
+    "description": "Diesen Bildschirm gibt es nicht. Lass uns zurück auf vertrautes Terrain gehen."
+  },
+  "auth": {
+    "eyebrow": "Konto",
+    "email": "E-Mail",
+    "emailPlaceholder": "you@example.com",
+    "password": "Passwort",
+    "newPassword": "Neues Passwort",
+    "confirmPassword": "Passwort wiederholen",
+    "passwordHint": "Mindestens 8 Zeichen, mit einem Buchstaben und einer Zahl.",
+    "signIn": {
+      "title": "Willkommen zurück.",
+      "subtitle": "Melde dich an, um deinen Lernpfad fortzusetzen.",
+      "submit": "Anmelden",
+      "forgot": "Passwort vergessen?",
+      "noAccount": "Neu hier? Konto erstellen"
+    },
+    "signUp": {
+      "title": "Fang an zu lernen.",
+      "subtitle": "Erstelle ein Konto, um Plan, Projekte und Fortschritt zu speichern.",
+      "submit": "Konto erstellen",
+      "haveAccount": "Schon ein Konto? Anmelden",
+      "checkEmailTitle": "Prüfe deine E-Mails",
+      "checkEmailMessage": "Wir haben einen Bestätigungslink an {{email}} gesendet. Öffne ihn und melde dich dann an."
+    },
+    "forgot": {
+      "title": "Passwort zurücksetzen.",
+      "subtitle": "Gib die E-Mail-Adresse deines Kontos ein. Wir senden dir einen 6-stelligen Code.",
+      "submit": "Code senden",
+      "back": "Zurück zur Anmeldung",
+      "sent": "Falls ein Konto für {{email}} existiert, ist ein Code unterwegs."
+    },
+    "reset": {
+      "title": "Wähle ein neues Passwort.",
+      "subtitle": "Gib den Code aus der E-Mail an {{email}} ein.",
+      "code": "Code aus der E-Mail",
+      "submit": "Neues Passwort speichern",
+      "resend": "Neuen Code senden",
+      "success": "Passwort aktualisiert. Du bist angemeldet."
+    },
+    "signOut": {
+      "action": "Abmelden",
+      "confirmTitle": "Abmelden?",
+      "confirmMessage": "Du kannst dich jederzeit mit E-Mail und Passwort wieder anmelden.",
+      "done": "Abgemeldet"
+    },
+    "validation": {
+      "emailRequired": "Gib deine E-Mail-Adresse ein.",
+      "emailInvalid": "Gib eine gültige E-Mail-Adresse ein, z. B. name@example.com.",
+      "passwordRequired": "Gib dein Passwort ein.",
+      "passwordTooShort": "Verwende mindestens 8 Zeichen.",
+      "passwordTooLong": "Verwende höchstens 72 Zeichen.",
+      "passwordWeak": "Verwende mindestens einen Buchstaben und eine Zahl.",
+      "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+      "codeInvalid": "Gib den Code aus der E-Mail ein (6 bis 10 Ziffern)."
+    },
+    "errors": {
+      "invalidCredentials": "E-Mail oder Passwort ist falsch.",
+      "emailNotConfirmed": "Bestätige zuerst deine E-Mail-Adresse. Den Link findest du in deinem Posteingang.",
+      "emailTaken": "Für diese E-Mail-Adresse gibt es bereits ein Konto. Melde dich stattdessen an.",
+      "weakPassword": "Dieses Passwort ist zu leicht zu erraten. Wähle ein sichereres.",
+      "samePassword": "Wähle ein anderes Passwort als dein aktuelles.",
+      "emailInvalid": "Diese E-Mail-Adresse kann nicht verwendet werden.",
+      "codeInvalid": "Der Code ist falsch oder abgelaufen. Fordere einen neuen an.",
+      "emailRateLimit": "Es wurden zu viele E-Mails gesendet. Warte ein paar Minuten und versuch es erneut.",
+      "tooManyRequests": "Zu viele Versuche. Warte eine Minute und versuch es erneut.",
+      "signupDisabled": "Neue Registrierungen sind derzeit geschlossen.",
+      "network": "Keine Verbindung zum Server. Prüfe deine Internetverbindung und versuch es erneut.",
+      "unknown": "Etwas ist schiefgelaufen. Versuch es erneut."
+    }
+  },
+  "profileForm": {
+    "displayName": "Anzeigename",
+    "displayNamePlaceholder": "Wie soll dein Mentor dich nennen?",
+    "experienceLevel": "Erfahrungsstufe",
+    "levels": {
+      "beginner": "Einsteiger",
+      "junior": "Junior",
+      "middle": "Middle",
+      "advanced": "Fortgeschritten"
+    },
+    "levelHints": {
+      "beginner": "Ich fange gerade an",
+      "junior": "Erste Projekte oder erster Job",
+      "middle": "Sicher, ich gehe in die Tiefe",
+      "advanced": "Erfahren, ich verfeinere meine Fähigkeiten"
+    },
+    "dailyMinutes": "Minuten pro Tag",
+    "dailyMinutesHint": "Zwischen 5 und 480 Minuten.",
+    "minutesOption": "{{count}} Min.",
+    "learningGoal": "Lernziel",
+    "learningGoalPlaceholder": "Zum Beispiel: meine erste React-App bauen und einen Junior-Job finden",
+    "uiLanguage": "Sprache der Oberfläche",
+    "languages": {
+      "en": "English",
+      "ru": "Русский",
+      "de": "Deutsch"
+    },
+    "validation": {
+      "nameTooShort": "Verwende mindestens 2 Zeichen.",
+      "nameTooLong": "Verwende höchstens 50 Zeichen.",
+      "nameInvalid": "Beginne mit einem Buchstaben; erlaubt sind Buchstaben, Zahlen, Leerzeichen, . - ' und _.",
+      "levelRequired": "Wähle deine Erfahrungsstufe.",
+      "minutesRequired": "Gib an, wie viele Minuten du pro Tag lernen kannst.",
+      "minutesInteger": "Gib eine ganze Zahl an Minuten ein.",
+      "minutesRange": "Wähle zwischen 5 und 480 Minuten.",
+      "goalTooShort": "Beschreibe dein Ziel mit mindestens 10 Zeichen oder lass das Feld leer.",
+      "goalTooLong": "Halte dein Ziel unter 280 Zeichen.",
+      "languageRequired": "Wähle eine Sprache."
+    }
+  },
+  "onboarding": {
+    "eyebrow": "Profil einrichten",
+    "title": "Erzähl deinem Mentor von dir.",
+    "subtitle": "Erklärungen und Pläne passen sich deinem Niveau und deiner Zeit an.",
+    "submit": "Speichern und weiter",
+    "step": "Schritt {{index}} von {{total}}",
+    "progressA11y": "Schritt {{index}} von {{total}}",
+    "back": "Zurück",
+    "skip": "Später",
+    "cancel": "Abbrechen",
+    "continue": "Weiter",
+    "change": "Ändern",
+    "restoring": "Deine Antworten werden wiederhergestellt",
+    "welcome": {
+      "eyebrow": "Personalisieren",
+      "title": "Stimme deinen Mentor ab.",
+      "subtitle": "Sechs kurze Fragen. Dein Mentor erklärt dann auf deinem Niveau, passend zu deinem Ziel und deiner Zeit.",
+      "duration": "Etwa 1 Minute",
+      "points": {
+        "level": "Erklärungen auf deinem Niveau",
+        "goal": "Fokus auf dein Hauptziel",
+        "time": "Passend zu deiner verfügbaren Zeit"
+      },
+      "start": "Los geht’s"
+    },
+    "skipConfirm": {
+      "title": "Jetzt überspringen?",
+      "message": "Du kannst das später auf der Startseite oder im Profil abschließen. Deine bisherigen Antworten bleiben auf diesem Gerät.",
+      "confirm": "Überspringen"
+    },
+    "name": {
+      "title": "Wie soll dein Mentor dich nennen?",
+      "subtitle": "Dieser Name erscheint in deinen Begrüßungen."
+    },
+    "experience": {
+      "title": "Wo stehst du gerade?",
+      "subtitle": "Dein Mentor passt seine Erklärungen an dieses Niveau an."
+    },
+    "goal": {
+      "title": "Was ist dein Hauptziel?",
+      "subtitle": "Wähle eins. Du kannst es später ändern.",
+      "options": {
+        "learn_javascript": "JavaScript lernen",
+        "build_web_apps": "Webanwendungen entwickeln",
+        "prepare_for_job": "Mich auf einen Job vorbereiten",
+        "improve_fundamentals": "Programmiergrundlagen stärken",
+        "learn_react": "React lernen",
+        "personal_projects": "Eigene Projekte umsetzen"
+      },
+      "detailsLabel": "Erzähl mehr",
+      "detailsPlaceholder": "Zum Beispiel: Ich möchte eine Portfolio-Website bauen und mich auf Junior-Stellen bewerben."
+    },
+    "time": {
+      "title": "Wie viel Zeit pro Tag?",
+      "subtitle": "Kurze, regelmäßige Einheiten funktionieren am besten.",
+      "presetsLabel": "Schnellauswahl",
+      "customLabel": "Oder Minuten eingeben",
+      "hint": "Zwischen 5 und 480 Minuten."
+    },
+    "technologies": {
+      "title": "Womit möchtest du arbeiten?",
+      "subtitle": "Wähle 1 bis 8 Technologien.",
+      "counter": "{{count}} von {{max}} ausgewählt",
+      "needOne": "Wähle mindestens eine Technologie, um fortzufahren.",
+      "limitReached": "Du kannst bis zu {{max}} wählen. Entferne eine, um eine andere hinzuzufügen.",
+      "categories": {
+        "language": "Sprachen",
+        "frontend": "Frontend",
+        "backend": "Backend",
+        "tools": "Tools"
+      },
+      "loading": "Technologien werden geladen",
+      "errorTitle": "Technologien konnten nicht geladen werden",
+      "errorMessage": "Prüfe deine Verbindung und versuch es erneut. Deine anderen Antworten sind gespeichert.",
+      "emptyTitle": "Keine Technologien verfügbar",
+      "emptyMessage": "Die Liste ist gerade leer. Versuch es später erneut."
+    },
+    "language": {
+      "title": "Sprache der Oberfläche",
+      "subtitle": "Wird nach dem Speichern übernommen."
+    },
+    "summary": {
+      "title": "Deine Einstellungen.",
+      "subtitle": "Prüfe deine Antworten und speichere sie.",
+      "personalizeTitle": "Deine aktualisierten Einstellungen.",
+      "save": "Speichern und starten",
+      "saveChanges": "Änderungen speichern",
+      "rows": {
+        "name": "Name",
+        "experience": "Niveau",
+        "goal": "Hauptziel",
+        "details": "Details zum Ziel",
+        "time": "Zeit pro Tag",
+        "technologies": "Technologien",
+        "language": "Sprache"
+      },
+      "noDetails": "Keine",
+      "minutes": "{{count}} Min.",
+      "errorNetwork": "Keine Verbindung zum Server. Deine Antworten sind auf diesem Gerät gespeichert. Versuch es erneut, sobald du online bist.",
+      "errorGeneric": "Deine Antworten konnten nicht gespeichert werden. Sie bleiben auf diesem Gerät. Versuch es erneut.",
+      "retry": "Erneut versuchen",
+      "saved": "Dein Mentor ist abgestimmt",
+      "personalizationSaved": "Personalisierung gespeichert"
+    },
+    "validation": {
+      "goalRequired": "Wähle dein Hauptziel.",
+      "detailsTooLong": "Halte die Details unter 500 Zeichen.",
+      "technologiesMin": "Wähle mindestens eine Technologie.",
+      "technologiesMax": "Wähle höchstens 8 Technologien.",
+      "technologiesDuplicate": "Jede Technologie kann nur einmal gewählt werden."
+    },
+    "loadError": {
+      "title": "Deine Antworten konnten nicht geladen werden",
+      "message": "Prüfe deine Verbindung und versuch es erneut."
+    },
+    "skipError": "Überspringen ist gerade nicht möglich. Prüfe deine Verbindung und versuch es erneut."
+  },
+  "profileEdit": {
+    "eyebrow": "Profil",
+    "title": "Profil bearbeiten.",
+    "submit": "Änderungen speichern",
+    "saved": "Profil gespeichert"
+  }
+}

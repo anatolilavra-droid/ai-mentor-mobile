@@ -93,6 +93,8 @@ describe('onboarding flow', () => {
     });
     expect(fake.fakeDb.profile?.onboarding_completed).toBe(true);
     expect(readDraft(USER_ID, 'onboarding')).toBeNull();
+    // The saved interface language is applied right away.
+    expect(await screen.findByText('Weiterlernen')).toBeOnTheScreen();
   });
 
   it('disables the other technologies after 8 and explains why', async () => {

@@ -1,4 +1,4 @@
-import '@/lib/i18n';
+import i18n from '@/lib/i18n';
 
 // Never talk to a real Supabase project from tests: lib/supabase/__mocks__/client.ts.
 jest.mock('@/lib/supabase/client');
@@ -52,6 +52,8 @@ jest.mock('expo-haptics', () => ({
 }));
 
 beforeEach(() => {
+  // A test that saves another ui_language switches the shared i18n instance; reset it.
+  void i18n.changeLanguage('en');
   const { resetFakeSupabase } = jest.requireMock('@/lib/supabase/client') as {
     resetFakeSupabase: () => void;
   };

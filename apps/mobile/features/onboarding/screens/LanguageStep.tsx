@@ -38,7 +38,6 @@ export function LanguageStep() {
             label={t('profileForm.uiLanguage')}
             value={field.value}
             onChange={field.onChange}
-            hint={field.value === 'en' ? undefined : t('onboarding.language.hint')}
             options={UI_LANGUAGES.map((language) => ({
               value: language,
               label: t(`profileForm.languages.${language}`),

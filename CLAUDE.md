@@ -607,8 +607,12 @@ validation, draft restore after closing the app, editing from the summary,
 saving to profiles and user_technologies, skip and "Finish setup",
 "Personalize your mentor" and the three-field Edit profile.
 supabase/tests/rls_onboarding.sql passes.
-Known limitation: ui_language is saved, but the interface stays English
-until ru/de translations are added.
+
+Interface translations (after Phase 3): the interface is available in
+English, Russian and German. English (en.json) is the source; ru.json and
+de.json must keep exactly the same keys and placeholders
+(__tests__/i18n.test.ts checks this). The saved ui_language is applied
+after saving; signed-out screens follow the device language.
 
 Next phase: not defined yet — wait for Anatoliy's instructions.
 

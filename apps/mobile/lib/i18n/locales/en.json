@@ -262,7 +262,6 @@
       "ru": "Русский",
       "de": "Deutsch"
     },
-    "languageHint": "Russian and German translations are coming. The interface stays in English until then.",
     "validation": {
       "nameTooShort": "Use at least 2 characters.",
       "nameTooLong": "Use at most 50 characters.",
@@ -355,8 +354,7 @@
     },
     "language": {
       "title": "Interface language",
-      "subtitle": "Saved to your profile.",
-      "hint": "Russian and German translations are coming. The interface stays in English until then."
+      "subtitle": "Applied when you save."
     },
     "summary": {
       "title": "Here's your setup.",

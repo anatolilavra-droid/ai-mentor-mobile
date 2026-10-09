@@ -7,7 +7,8 @@ learning plan, and keep projects and useful answers in one place.
 > **Status:** Phase 3 — Onboarding and Personalization completed. Email and
 > password accounts (Supabase Auth), secure session storage, protected routes,
 > a guided onboarding flow with a local draft, a technologies catalog and
-> "Personalize your mentor". The interface is English only for now.
+> "Personalize your mentor". The interface is available in English, Russian
+> and German.
 > AI and payments are intentionally not implemented yet.
 
 ## Tech stack
@@ -15,7 +16,7 @@ learning plan, and keep projects and useful answers in one place.
 - React Native + Expo (SDK 57) + TypeScript (strict)
 - Expo Router (file-based navigation, custom bottom tab bar)
 - Reanimated (purposeful motion, respects reduced motion)
-- i18next (English UI, ready for more languages)
+- i18next (English, Russian and German UI)
 - Supabase Auth + PostgreSQL with Row Level Security
 - TanStack Query (server state), Zustand (local UI state only)
 - React Hook Form + Zod (forms and validation)
