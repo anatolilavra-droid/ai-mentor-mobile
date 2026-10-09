@@ -3,7 +3,7 @@ import { Router, type RequestHandler } from 'express';
 import { createMeHandler } from '../controllers/me.controller.js';
 import { defineRoute } from '../lib/defineRoute.js';
 import { emptyQuerySchema } from '../schemas/common.schema.js';
-import { meResponseSchema } from '../schemas/me.schema.js';
+import { meResponseSchema } from '@ai-mentor/shared';
 import type { ProfileService } from '../services/profile.service.js';
 
 export function meRoutes(deps: { auth: RequestHandler; profileService: ProfileService }): Router {

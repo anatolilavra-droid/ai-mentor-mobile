@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
 import { AppError } from '../errors/AppError.js';
-import type { MeResponse } from '../schemas/me.schema.js';
+import type { MeResponse } from '@ai-mentor/shared';
 import type { ProfileService } from '../services/profile.service.js';
 
 export function createMeHandler(profileService: ProfileService) {

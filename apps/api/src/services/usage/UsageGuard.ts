@@ -1,9 +1,7 @@
-import type { Usage } from '../../schemas/chat.schema.js';
+import type { Quota, UsageFeature } from '@ai-mentor/shared';
 
-/** Features with a monthly limit (plan_limits in the database). */
-export type UsageFeature = 'chat' | 'code_review';
-
-export type Quota = Usage['quota'];
+/** Quota of one feature and the features with a monthly limit (plan_limits in the database). */
+export type { Quota, UsageFeature };
 
 export type UsageDecision =
   { allowed: true; quota: Quota } | { allowed: false; quota: Quota; resetsAt: string };

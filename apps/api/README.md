@@ -51,17 +51,24 @@ Request:
 
 ```json
 {
-  "message": "What is a closure?",
-  "conversationId": "optional UUID",
+  "message": "Explain it simpler",
+  "history": [
+    { "role": "user", "content": "What is a closure?" },
+    { "role": "assistant", "content": "A closure keeps variables alive…" }
+  ],
+  "conversationId": "optional UUID (not used yet)",
   "context": { "technology": "javascript", "level": "junior", "learningGoal": "learn_javascript" }
 }
 ```
 
 - `message`: 1 to 10 000 characters after trimming.
+- `history`: optional earlier turns of the current conversation (at most 40
+  items and 60 000 characters). The server keeps only the most recent ones
+  that fit the configured limits (see Conversation memory). Nothing is stored.
 - `context` fields are optional hints for this answer only (enums and a
-  technology slug). Missing fields come from the profile. They never affect
-  plan, limits or access.
-- Unknown fields are rejected.
+  technology catalog id). Missing fields come from the profile and onboarding.
+  They never affect plan, limits or access.
+- Unknown fields are rejected. All contracts live in `@ai-mentor/shared`.
 
 Response:
 
@@ -69,13 +76,14 @@ Response:
 {
   "answer": "…",
   "provider": "mock",
-  "promptVersion": "chat/v1",
+  "promptVersion": "chat/v2",
   "requestId": "…",
   "usage": {
     "inputTokens": 120,
     "outputTokens": 40,
     "quota": { "used": 3, "limit": 30, "period": "month" }
-  }
+  },
+  "context": { "historyUsed": 2, "historyDropped": 0 }
 }
 ```
 
@@ -166,9 +174,21 @@ helmet → request id + log → abort signal → request timeout → per-IP limi
   uses the official `@google/genai` SDK with the key from the environment, no
   automatic retries, and maps errors to provider-neutral kinds. Users outside
   `AI_REAL_PROVIDER_USER_IDS` always get the mock.
+- **Conversation memory** (`src/services/ai/chatContext.ts`):
+  `buildChatContext()` combines the learner context (level, goal, answer
+  language, daily minutes and onboarding technologies — never the name or the
+  free-text goal details) with the trimmed history.
+  `trimConversationHistory()` (from `@ai-mentor/shared`, also used by the app)
+  keeps the last `CHAT_HISTORY_MAX_MESSAGES` (12) messages within
+  `CHAT_CONTEXT_MAX_CHARS` (24 000), shortens older messages longer than
+  `CHAT_HISTORY_MESSAGE_MAX_CHARS` (4 000) and never starts with a mentor
+  turn. `estimateContextSize()` logs the approximate token count. The system
+  prompt and learner context are always kept; history is never placed in the
+  system prompt. A summary of dropped messages may come later.
 - **Prompts**: `src/prompts/<feature>/v<N>.ts`. A published version is never
   edited: changes go into a new version and `src/prompts/registry.ts` points to
   it. User text is passed as delimited data, never inside the system prompt.
+  Chat uses `chat/v2` (history + onboarding context); `chat/v1` stays unchanged.
 - **No code execution**: user code is data only. ESLint forbids `eval`,
   `new Function`, `vm`, `child_process` and `worker_threads`.
 

@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
-import { chatResponseSchema } from '../src/schemas/chat.schema.js';
+import { chatResponseSchema } from '@ai-mentor/shared';
 import {
   AIProviderError,
   type AIProvider,
@@ -58,7 +58,7 @@ describe('POST /api/ai/chat', () => {
     expect(res.status).toBe(200);
     const body = chatResponseSchema.parse(res.body);
     expect(body.provider).toBe('mock');
-    expect(body.promptVersion).toBe('chat/v1');
+    expect(body.promptVersion).toBe('chat/v2');
     expect(body.requestId).toBe(res.headers['x-request-id']);
     expect(body.usage.quota).toEqual({ used: 1, limit: 30, period: 'month' });
     expect(body.usage.inputTokens).toBeGreaterThan(0);

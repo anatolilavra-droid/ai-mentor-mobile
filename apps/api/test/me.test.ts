@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
-import { meResponseSchema } from '../src/schemas/me.schema.js';
+import { meResponseSchema } from '@ai-mentor/shared';
 
 import { createFakeSupabase, profileRow } from './helpers/fakeSupabase.js';
 import { buildTestApp } from './helpers/testApp.js';

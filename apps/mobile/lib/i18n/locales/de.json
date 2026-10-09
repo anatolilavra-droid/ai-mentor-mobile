@@ -103,19 +103,63 @@
   },
   "chat": {
     "eyebrow": "KI-Mentor",
-    "title": "Frag, was du willst.",
+    "title": "Frag einfach.",
     "subtitle": "Fragen, Code, Fehler — Schritt für Schritt beantwortet, mit kurzen Beispielen.",
-    "emptyTitle": "Dein Mentor ist fast da",
-    "emptyDescription": "Unterhaltungen erscheinen hier, sobald der Mentor verbunden ist.",
-    "previewLabel": "Was du fragen kannst",
-    "preview": {
-      "questions": "Programmierfragen auf deinem Niveau",
-      "explain": "Erklärungen zu echtem Code",
-      "fix": "Fehlerbehebungen mit Begründung"
+    "emptyTitle": "Fang mit einer Frage an",
+    "emptyDescription": "Frag nach einem Konzept, füge eine Fehlermeldung ein oder tippe auf ein Beispiel.",
+    "suggestionHint": "Setzt diese Frage in das Nachrichtenfeld",
+    "suggestions": {
+      "closure": "Was ist eine Closure in JavaScript? Erkläre es mit einem kleinen Beispiel.",
+      "error": "Was bedeutet „TypeError: Cannot read properties of undefined“?",
+      "letConst": "Wann verwende ich let und wann const?"
     },
-    "inputPlaceholder": "Frag zu Code, Fehlern, Konzepten…",
-    "inputA11y": "Nachrichtenfeld, kommt mit einem späteren Update",
-    "send": "Nachricht senden"
+    "inputPlaceholder": "Frag nach Code, Fehlern, Konzepten…",
+    "inputA11y": "Nachricht an deinen Mentor",
+    "send": "Nachricht senden",
+    "counter": "{{count}} / {{max}}",
+    "youSaid": "Du: {{message}}",
+    "notSent": "Nicht gesendet",
+    "mentor": "Mentor",
+    "demoAnswer": "Demo-Antwort",
+    "thinking": "Der Mentor denkt nach…",
+    "waking": "Der Server wird gerade gestartet. Die erste Antwort kann bis zu einer Minute dauern.",
+    "startOver": "Neuer Chat",
+    "quota": "{{used}} / {{limit}} diesen Monat",
+    "answerTruncated": "Die Antwort war zu lang und wird nur teilweise angezeigt.",
+    "notConnected": {
+      "title": "Der Mentor ist noch nicht verbunden",
+      "description": "Dieser Build hat keine API-Adresse. Der Chat funktioniert in einem Build mit konfigurierter API."
+    },
+    "link": {
+      "title": "Link öffnen?",
+      "message": "Öffnet {{host}} im Browser.",
+      "open": "Öffnen"
+    },
+    "limit": {
+      "title": "Deine Nachrichten für diesen Monat sind aufgebraucht",
+      "used": "{{used}} von {{limit}} Nachrichten genutzt.",
+      "resets": "Das Limit wird am {{date}} erneuert.",
+      "pro": "Höhere Limits kommen mit dem Pro-Plan. Zahlungen sind noch nicht verfügbar."
+    },
+    "errors": {
+      "notConfigured": "Der Mentor ist in diesem Build nicht verbunden.",
+      "network": "Keine Verbindung zum Mentor. Prüfe dein Internet und versuche es erneut.",
+      "timeout": "Der Mentor hat zu lange gebraucht. Versuche es erneut.",
+      "unauthorized": "Deine Sitzung ist abgelaufen. Melde dich erneut an.",
+      "rateLimited": "Zu viele Nachrichten in kurzer Zeit. Warte kurz und versuche es erneut.",
+      "limitReached": "Du hast das Limit für diesen Monat erreicht.",
+      "invalid": "Die Nachricht konnte nicht gesendet werden. Versuche eine kürzere Nachricht.",
+      "unavailable": "Der Mentor ist gerade nicht erreichbar. Versuche es gleich noch einmal.",
+      "generic": "Etwas ist schiefgelaufen. Versuche es erneut."
+    }
+  },
+  "codeBlock": {
+    "plainLanguage": "Text",
+    "copy": "Kopieren",
+    "copiedShort": "Kopiert",
+    "copied": "Code kopiert",
+    "copyFailed": "Code konnte nicht kopiert werden",
+    "copyA11y": "{{language}}-Code kopieren"
   },
   "projects": {
     "eyebrow": "Arbeitsbereich",

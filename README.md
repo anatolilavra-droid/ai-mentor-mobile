@@ -4,14 +4,15 @@ A premium, dark-first mobile AI mentor for beginner and junior developers:
 learn programming, understand errors, review code, follow a personal
 learning plan, and keep projects and useful answers in one place.
 
-> **Status:** Phase 5a — AI usage limits and Gemini (testing) completed. Email and
-> password accounts (Supabase Auth), secure session storage, protected routes,
-> a guided onboarding flow, a technologies catalog and "Personalize your
-> mentor". The interface is available in English, Russian and German. The
-> backend (`apps/api`) verifies Supabase sessions, enforces monthly Free/Pro AI
-> limits and runs the AI pipeline with a mock provider, or Gemini (free tier)
-> for the developer's own account. Hosting, the chat screen and payments are
-> not connected yet.
+> **Status:** Phase 5b — hosting and the chat screen. Email and password
+> accounts (Supabase Auth), secure session storage, protected routes, a guided
+> onboarding flow, a technologies catalog and "Personalize your mentor". The
+> interface is available in English, Russian and German. The AI mentor chat
+> remembers the recent conversation and renders formatted answers with
+> copyable code. The backend (`apps/api`) verifies Supabase sessions, enforces
+> monthly Free/Pro AI limits and is prepared for Render Free; it answers with
+> Gemini (free tier) for the developer's own account and a demo provider for
+> everyone else. Payments are not connected.
 
 ## Tech stack
 
@@ -40,6 +41,9 @@ apps/
     types/        shared types
     __tests__/    unit and screen tests
   api/            backend: auth, AI pipeline, versioned prompts (see apps/api/README.md)
+packages/
+  shared/         schemas, types and constants used by both apps (@ai-mentor/shared)
+render.yaml       Render Free Blueprint for the API (see apps/api/DEPLOYMENT.md)
 ```
 
 ## Requirements
@@ -86,6 +90,7 @@ The **Android preview APK** workflow builds an installable APK on GitHub.
 
 1. Once: Settings → Secrets and variables → Actions → **Variables** → add
    `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+   Optional: `EXPO_PUBLIC_API_URL` (the deployed API address) to connect the chat.
 2. Actions → **Android preview APK** → **Run workflow**.
 3. When it finishes, download **ai-mentor-preview-apk** from the run, open the
    .zip on the phone and install the APK.
@@ -104,7 +109,9 @@ pnpm check          # all of the above
 
 The **API checks** workflow runs the backend checks on GitHub for every push
 that touches `apps/api`. The manual **AI smoke test** workflow calls Gemini with
-a fixed question (see [`apps/api/README.md`](apps/api/README.md)). To run the backend locally, see
+a fixed question (see [`apps/api/README.md`](apps/api/README.md)). After the API
+is deployed on Render, **API live check** calls its `/health` endpoint
+(see [`apps/api/DEPLOYMENT.md`](apps/api/DEPLOYMENT.md)). To run the backend locally, see
 [`apps/api/README.md`](apps/api/README.md).
 
 ## Design system

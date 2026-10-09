@@ -1,36 +1,34 @@
 import type { DefaultValues } from 'react-hook-form';
 import { z } from 'zod';
 
+import {
+  CUSTOM_GOAL_DETAILS_MAX,
+  DAILY_MINUTES_MAX,
+  DAILY_MINUTES_MIN,
+  DISPLAY_NAME_MAX,
+  DISPLAY_NAME_MIN,
+  DISPLAY_NAME_PATTERN,
+  EXPERIENCE_LEVELS,
+  PRIMARY_GOALS,
+  UI_LANGUAGES,
+} from '@ai-mentor/shared';
+
 import type { TranslationKey } from '@/lib/i18n';
-import type { ExperienceLevel, PrimaryGoal, ProfileUpdate, UiLanguage } from '@/types/database';
+import type { ProfileUpdate } from '@/types/database';
 
 const msg = (key: TranslationKey) => ({ error: key });
 
-export const EXPERIENCE_LEVELS = [
-  'beginner',
-  'junior',
-  'middle',
-  'advanced',
-] as const satisfies readonly ExperienceLevel[];
-export const UI_LANGUAGES = ['en', 'ru', 'de'] as const satisfies readonly UiLanguage[];
-export const PRIMARY_GOALS = [
-  'learn_javascript',
-  'build_web_apps',
-  'prepare_for_job',
-  'improve_fundamentals',
-  'learn_react',
-  'personal_projects',
-] as const satisfies readonly PrimaryGoal[];
-
-/** Same limits as the database constraints in supabase/migrations. */
-export const DISPLAY_NAME_MIN = 2;
-export const DISPLAY_NAME_MAX = 50;
-export const DAILY_MINUTES_MIN = 5;
-export const DAILY_MINUTES_MAX = 480;
-export const CUSTOM_GOAL_DETAILS_MAX = 500;
-
-/** Starts with a letter (any script); then letters, digits, spaces, . - ' _ */
-const DISPLAY_NAME_PATTERN = /^\p{L}[\p{L}\p{M}\p{N} .'_-]*$/u;
+/** Enums and limits come from @ai-mentor/shared, the same values the API and database use. */
+export {
+  CUSTOM_GOAL_DETAILS_MAX,
+  DAILY_MINUTES_MAX,
+  DAILY_MINUTES_MIN,
+  DISPLAY_NAME_MAX,
+  DISPLAY_NAME_MIN,
+  EXPERIENCE_LEVELS,
+  PRIMARY_GOALS,
+  UI_LANGUAGES,
+};
 
 /** Field schemas shared by Edit profile and onboarding, so the rules live in one place. */
 export const displayNameField = z

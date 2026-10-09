@@ -3,14 +3,15 @@ import { z } from 'zod';
 
 import { AppError } from '../../errors/AppError.js';
 import { prompts } from '../../prompts/registry.js';
+import type { ChatRequest, ChatResponse, HistoryLimits } from '@ai-mentor/shared';
 import type { LearnerContext } from '../../prompts/types.js';
-import type { ChatContext, ChatRequest, ChatResponse } from '../../schemas/chat.schema.js';
 import type { CodeReviewOutput, CodeReviewRequest } from '../../schemas/code-review.schema.js';
 import type { ProfileRow } from '../../schemas/me.schema.js';
 import type { ProfileService } from '../profile.service.js';
 import type { Quota, UsageFeature, UsageGuard } from '../usage/UsageGuard.js';
 
 import { toAppError } from './ai.errors.js';
+import { buildChatContext, estimateContextSize } from './chatContext.js';
 import {
   codeReviewResultSchema,
   generateTextResultSchema,
@@ -27,7 +28,7 @@ export type AICall = {
 
 type AIResultMeta = Pick<ChatResponse, 'provider' | 'promptVersion' | 'usage'>;
 
-export type ChatResult = AIResultMeta & { answer: string };
+export type ChatResult = AIResultMeta & Pick<ChatResponse, 'answer' | 'context'>;
 export type CodeReviewResultData = AIResultMeta & { review: CodeReviewOutput };
 
 export type AIService = {
@@ -41,6 +42,8 @@ export type AIServiceDeps = {
   usageGuard: UsageGuard;
   profileService: ProfileService;
   aiTimeoutMs: number;
+  /** How much conversation history a chat prompt may carry. */
+  historyLimits: HistoryLimits;
 };
 
 /**
@@ -48,7 +51,7 @@ export type AIServiceDeps = {
  * timeout) → output validation → usage record. Controllers only map HTTP.
  */
 export function createAIService(deps: AIServiceDeps): AIService {
-  const { selectProvider, usageGuard, profileService, aiTimeoutMs } = deps;
+  const { selectProvider, usageGuard, profileService, aiTimeoutMs, historyLimits } = deps;
   const codeReviewJsonSchema = z.toJSONSchema(prompts.codeReview.outputSchema);
 
   async function checkUsage(call: AICall, feature: UsageFeature): Promise<Quota> {
@@ -82,30 +85,43 @@ export function createAIService(deps: AIServiceDeps): AIService {
     }
   }
 
-  /** The profile only personalizes the answer, so chat still works without it. */
-  async function loadProfile(call: AICall): Promise<ProfileRow | null> {
+  /**
+   * Profile and onboarding technologies only personalize the answer, so the
+   * AI still answers (with defaults) when they cannot be read.
+   */
+  async function optional<T>(
+    call: AICall,
+    what: string,
+    load: () => Promise<T>,
+    fallback: T,
+  ): Promise<T> {
     try {
-      return await profileService.getOwnProfile(call);
+      return await load();
     } catch (error) {
       if (
         !call.signal.aborted &&
         error instanceof AppError &&
         (error.code === 'PROFILE_NOT_FOUND' || error.code === 'SERVICE_UNAVAILABLE')
       ) {
-        call.log.warn({ code: error.code }, 'profile unavailable, using default learner context');
-        return null;
+        call.log.warn({ code: error.code }, `${what} unavailable, using defaults`);
+        return fallback;
       }
       throw error;
     }
   }
 
-  function resolveLearner(profile: ProfileRow | null, hints: ChatContext = {}): LearnerContext {
-    return {
-      level: hints.level ?? profile?.experience_level ?? null,
-      learningGoal: hints.learningGoal ?? profile?.primary_goal ?? null,
-      technology: hints.technology ?? null,
-      answerLanguage: profile?.ui_language ?? 'en',
-    };
+  async function loadLearnerData(call: AICall) {
+    const [profile, technologies] = await Promise.all([
+      optional<ProfileRow | null>(call, 'profile', () => profileService.getOwnProfile(call), null),
+      optional<string[]>(call, 'technologies', () => profileService.getOwnTechnologies(call), []),
+    ]);
+    return { profile, technologies };
+  }
+
+  /** Learner context for prompts without history (code review). */
+  async function loadLearner(call: AICall): Promise<LearnerContext> {
+    const { profile, technologies } = await loadLearnerData(call);
+    return buildChatContext({ profile, technologies, limits: historyLimits }).learner;
   }
 
   /** Runs one provider call with the AI timeout and the request's abort signal. */
@@ -160,9 +176,24 @@ export function createAIService(deps: AIServiceDeps): AIService {
     async chat(call, request) {
       const quota = await checkUsage(call, 'chat');
       const provider = selectProvider(call.userId);
-      const learner = resolveLearner(await loadProfile(call), request.context);
+      const { profile, technologies } = await loadLearnerData(call);
+      const context = buildChatContext({
+        profile,
+        technologies,
+        hints: request.context,
+        history: request.history,
+        limits: historyLimits,
+      });
       const prompt = prompts.chat;
-      const { system, messages } = prompt.build({ message: request.message }, learner);
+      const { system, messages } = prompt.build(
+        { message: request.message, history: context.history },
+        context.learner,
+      );
+      const size = estimateContextSize({ system, messages });
+      call.log.info(
+        { chatContext: { ...context.stats, estimatedTokens: size.estimatedTokens } },
+        'chat context built',
+      );
 
       const startedAt = performance.now();
       const raw = await callProvider(call, provider, prompt.ref, (signal) =>
@@ -183,13 +214,14 @@ export function createAIService(deps: AIServiceDeps): AIService {
         provider: provider.name,
         promptVersion: prompt.ref,
         usage: { ...result.data.usage, quota: quotaAfter },
+        context: { historyUsed: context.stats.kept, historyDropped: context.stats.dropped },
       };
     },
 
     async reviewCode(call, request) {
       const quota = await checkUsage(call, 'code_review');
       const provider = selectProvider(call.userId);
-      const learner = resolveLearner(await loadProfile(call));
+      const learner = await loadLearner(call);
       const prompt = prompts.codeReview;
       const { system, messages } = prompt.build(request, learner);
 

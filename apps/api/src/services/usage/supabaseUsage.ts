@@ -2,12 +2,12 @@ import { z } from 'zod';
 
 import { AppError } from '../../errors/AppError.js';
 import type { UserDataClientFactory } from '../../lib/supabase.js';
+import type { SubscriptionResponse, UsageResponse } from '@ai-mentor/shared';
+
 import {
   quotaRowSchema,
   subscriptionRowSchema,
   type QuotaRow,
-  type SubscriptionResponse,
-  type UsageResponse,
 } from '../../schemas/usage.schema.js';
 
 import type { Quota, UsageCaller, UsageFeature, UsageGuard } from './UsageGuard.js';

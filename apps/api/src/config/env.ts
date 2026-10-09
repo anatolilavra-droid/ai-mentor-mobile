@@ -6,6 +6,11 @@ const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: intFromEnv(1, 65535).default(3000),
+    /** Interface to listen on. 0.0.0.0 so the platform's router can reach the server. */
+    HOST: z
+      .string()
+      .regex(/^[a-z0-9.:-]{1,64}$/i)
+      .default('0.0.0.0'),
     LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
@@ -34,10 +39,15 @@ const envSchema = z
     AI_TIMEOUT_MS: intFromEnv(1, 120_000).default(30_000),
     REQUEST_TIMEOUT_MS: intFromEnv(1, 180_000).default(40_000),
 
+    /** Fits a 10 000-character message plus the largest allowed history. */
     JSON_BODY_LIMIT: z
       .string()
       .regex(/^\d{1,4}kb$/)
-      .default('64kb'),
+      .default('256kb'),
+    /** Conversation history sent to the AI: last N messages within a character budget. */
+    CHAT_HISTORY_MAX_MESSAGES: intFromEnv(0, 40).default(12),
+    CHAT_CONTEXT_MAX_CHARS: intFromEnv(0, 60_000).default(24_000),
+    CHAT_HISTORY_MESSAGE_MAX_CHARS: intFromEnv(200, 40_000).default(4_000),
     RATE_LIMIT_IP_MAX: intFromEnv(1, 100_000).default(300),
     RATE_LIMIT_IP_WINDOW_MS: intFromEnv(1_000, 86_400_000).default(300_000),
     RATE_LIMIT_AI_MAX: intFromEnv(1, 10_000).default(10),

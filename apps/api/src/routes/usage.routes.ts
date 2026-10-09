@@ -3,7 +3,7 @@ import { Router, type RequestHandler } from 'express';
 import { createSubscriptionHandler, createUsageHandler } from '../controllers/usage.controller.js';
 import { defineRoute } from '../lib/defineRoute.js';
 import { emptyQuerySchema } from '../schemas/common.schema.js';
-import { subscriptionResponseSchema, usageResponseSchema } from '../schemas/usage.schema.js';
+import { subscriptionResponseSchema, usageResponseSchema } from '@ai-mentor/shared';
 import type { SupabaseUsage } from '../services/usage/supabaseUsage.js';
 
 /** The caller's own plan and usage. No user id is accepted from the client. */

@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
-import { errorResponseSchema } from '../src/schemas/error.schema.js';
+import { errorResponseSchema } from '@ai-mentor/shared';
 
 import { buildTestApp } from './helpers/testApp.js';
 import { bearer, signToken } from './helpers/tokens.js';

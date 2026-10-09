@@ -1,3 +1,4 @@
+import { CHAT_HISTORY_DEFAULTS } from '@ai-mentor/shared';
 import pino from 'pino';
 import { describe, expect, it } from 'vitest';
 
@@ -28,6 +29,7 @@ function makeService(provider: AIProvider) {
     usageGuard: createSupabaseUsage(supabase.factory).guard,
     profileService: createProfileService(supabase.factory),
     aiTimeoutMs: 1_000,
+    historyLimits: CHAT_HISTORY_DEFAULTS,
   });
 }
 

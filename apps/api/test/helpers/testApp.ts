@@ -1,3 +1,5 @@
+import { CHAT_HISTORY_DEFAULTS } from '@ai-mentor/shared';
+
 import { createApp, type AppConfig, type AppDeps } from '../../src/app.js';
 import { createJwksVerifier } from '../../src/auth/jwksVerifier.js';
 import { createLogger } from '../../src/lib/logger.js';
@@ -16,6 +18,7 @@ export const testConfig: AppConfig = {
   rateLimitAi: { max: 1_000, windowMs: 60_000 },
   trustProxy: 0,
   realAiUserIds: [],
+  historyLimits: CHAT_HISTORY_DEFAULTS,
 };
 
 type Overrides = Partial<Omit<AppDeps, 'config' | 'logger'>> & {

@@ -1,3 +1,4 @@
+import type { HistoryLimits } from '@ai-mentor/shared';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
 import type { Logger } from 'pino';
@@ -33,6 +34,8 @@ export type AppConfig = {
    * nobody else's data reaches a free-tier provider. Ignored for the mock provider.
    */
   realAiUserIds: readonly string[];
+  /** Conversation history limits for chat prompts. */
+  historyLimits: HistoryLimits;
 };
 
 export type AppDeps = {
@@ -64,6 +67,7 @@ export function createApp(deps: AppDeps): Express {
     usageGuard: deps.usageGuard ?? usage.guard,
     profileService,
     aiTimeoutMs: config.aiTimeoutMs,
+    historyLimits: config.historyLimits,
   });
   const auth = requireAuth(deps.tokenVerifier);
 

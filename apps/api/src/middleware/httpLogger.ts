@@ -33,5 +33,12 @@ export function createHttpLogger(logger: Logger) {
     },
     customSuccessMessage: () => 'request completed',
     customErrorMessage: () => 'request failed',
+    // errorHandler already logged the real error with its stack; the request
+    // line keeps only status and timing, without pino-http's synthetic error.
+    customErrorObject: (_req, _res, _error, value: Record<string, unknown>) => {
+      const rest = { ...value };
+      delete rest.err;
+      return rest;
+    },
   });
 }

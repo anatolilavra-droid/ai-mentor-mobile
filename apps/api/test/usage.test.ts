@@ -1,8 +1,11 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
-import { errorResponseSchema } from '../src/schemas/error.schema.js';
-import { subscriptionResponseSchema, usageResponseSchema } from '../src/schemas/usage.schema.js';
+import {
+  errorResponseSchema,
+  subscriptionResponseSchema,
+  usageResponseSchema,
+} from '@ai-mentor/shared';
 import { AIProviderError, type AIProvider } from '../src/services/ai/providers/AIProvider.js';
 import { createMockProvider } from '../src/services/ai/providers/mock.provider.js';
 

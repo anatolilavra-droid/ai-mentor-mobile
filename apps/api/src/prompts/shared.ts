@@ -25,6 +25,23 @@ export function describeLearner(learner: LearnerContext): string {
 }
 
 /**
+ * describeLearner plus the onboarding context (technologies, daily time).
+ * Used from chat/v2 on; v1 prompts keep describeLearner unchanged.
+ */
+export function describeLearnerProfile(learner: LearnerContext): string {
+  const lines = [describeLearner(learner)];
+  if (learner.technologies.length > 0) {
+    lines.push(`Technologies the learner studies: ${learner.technologies.join(', ')}.`);
+  }
+  if (learner.dailyMinutes) {
+    lines.push(
+      `The learner has about ${learner.dailyMinutes} minutes a day: keep suggested exercises small enough for that.`,
+    );
+  }
+  return lines.join('\n');
+}
+
+/**
  * Wraps user text in clear delimiters. The system prompt tells the model to
  * treat everything inside as data, not as instructions.
  */

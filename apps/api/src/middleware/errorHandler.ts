@@ -1,7 +1,7 @@
 import type { ErrorRequestHandler, Response } from 'express';
 
 import { AppError, isAppError } from '../errors/AppError.js';
-import type { ErrorResponse } from '../schemas/error.schema.js';
+import type { ErrorResponse } from '@ai-mentor/shared';
 
 import { getRequestId } from './requestId.js';
 

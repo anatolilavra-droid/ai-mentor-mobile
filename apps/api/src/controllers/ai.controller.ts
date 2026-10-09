@@ -2,7 +2,7 @@ import type { Request } from 'express';
 
 import { AppError } from '../errors/AppError.js';
 import { getRequestId } from '../middleware/requestId.js';
-import type { ChatRequest, ChatResponse } from '../schemas/chat.schema.js';
+import type { ChatRequest, ChatResponse } from '@ai-mentor/shared';
 import type { AICall, AIService } from '../services/ai/ai.service.js';
 
 function toCall(req: Request): AICall {

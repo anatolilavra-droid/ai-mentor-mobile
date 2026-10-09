@@ -1,14 +1,8 @@
+import type { ErrorDetail, QuotaDetail } from '@ai-mentor/shared';
+
 import { DEFAULT_MESSAGES, ERROR_STATUS, type ErrorCode } from './codes.js';
 
-export type ErrorDetail = { path: string; message: string };
-
-/** Sent with USAGE_LIMIT_REACHED so the app can show the limit and when it resets. */
-export type QuotaDetail = {
-  feature: 'chat' | 'code_review';
-  used: number;
-  limit: number;
-  resetsAt: string;
-};
+export type { ErrorDetail, QuotaDetail };
 
 /**
  * An error with a stable code and a safe message. `cause` is logged on the

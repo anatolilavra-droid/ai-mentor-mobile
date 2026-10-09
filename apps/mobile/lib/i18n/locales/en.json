@@ -105,17 +105,61 @@
     "eyebrow": "AI mentor",
     "title": "Ask anything.",
     "subtitle": "Questions, code, errors — answered step by step, with short examples.",
-    "emptyTitle": "Your mentor is almost here",
-    "emptyDescription": "Conversations will appear here once the mentor is connected.",
-    "previewLabel": "What you will be able to ask",
-    "preview": {
-      "questions": "Programming questions, at your level",
-      "explain": "Explanations of real code",
-      "fix": "Error fixes with the reasoning behind them"
+    "emptyTitle": "Start with a question",
+    "emptyDescription": "Ask about a concept, paste an error, or tap an example below.",
+    "suggestionHint": "Puts this question into the message field",
+    "suggestions": {
+      "closure": "What is a closure in JavaScript? Explain with a small example.",
+      "error": "What does \"TypeError: Cannot read properties of undefined\" mean?",
+      "letConst": "When should I use let and when const?"
     },
     "inputPlaceholder": "Ask about code, errors, concepts…",
-    "inputA11y": "Message input, available in a future update",
-    "send": "Send message"
+    "inputA11y": "Message to your mentor",
+    "send": "Send message",
+    "counter": "{{count}} / {{max}}",
+    "youSaid": "You: {{message}}",
+    "notSent": "Not sent",
+    "mentor": "Mentor",
+    "demoAnswer": "Demo answer",
+    "thinking": "Mentor is thinking…",
+    "waking": "The server is waking up. The first answer can take up to a minute.",
+    "startOver": "New chat",
+    "quota": "{{used}} / {{limit}} this month",
+    "answerTruncated": "The answer was too long and is shown in part.",
+    "notConnected": {
+      "title": "The mentor is not connected yet",
+      "description": "This build has no API address. The chat will work in a build with the API configured."
+    },
+    "link": {
+      "title": "Open link?",
+      "message": "This opens {{host}} in your browser.",
+      "open": "Open"
+    },
+    "limit": {
+      "title": "You have used this month's messages",
+      "used": "{{used}} of {{limit}} messages used.",
+      "resets": "The limit renews on {{date}}.",
+      "pro": "Higher limits will come with the Pro plan. Payments are not available yet."
+    },
+    "errors": {
+      "notConfigured": "The mentor is not connected in this build.",
+      "network": "No connection to the mentor. Check your internet and try again.",
+      "timeout": "The mentor took too long to answer. Try again.",
+      "unauthorized": "Your session has expired. Sign in again.",
+      "rateLimited": "Too many messages in a short time. Wait a moment and try again.",
+      "limitReached": "You have reached this month's limit.",
+      "invalid": "This message could not be sent. Try a shorter message.",
+      "unavailable": "The mentor is unavailable right now. Try again in a moment.",
+      "generic": "Something went wrong. Try again."
+    }
+  },
+  "codeBlock": {
+    "plainLanguage": "text",
+    "copy": "Copy",
+    "copiedShort": "Copied",
+    "copied": "Code copied",
+    "copyFailed": "Could not copy the code",
+    "copyA11y": "Copy {{language}} code"
   },
   "projects": {
     "eyebrow": "Workspace",

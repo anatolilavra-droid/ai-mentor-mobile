@@ -32,6 +32,8 @@ type Failure = { status: number; message: string };
 export type FakeSupabaseOptions = {
   rows?: FakeRow[];
   subscriptions?: { user_id: string; plan: Plan; status: 'active' | 'canceled' }[];
+  /** Onboarding technologies per user (user_technologies). */
+  technologies?: Record<string, string[]>;
   /** Starting usage this month, per user and feature. */
   usage?: Record<string, Partial<Record<Feature, number>>>;
   /** Simulates a PostgREST or network failure for table queries. */
@@ -58,8 +60,15 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
   const tables: Record<string, FakeRow[]> = {
     profiles: options.rows ?? [profileRow(USER_A), profileRow(USER_B)],
     subscriptions: options.subscriptions ?? [],
+    user_technologies: Object.entries(options.technologies ?? {}).flatMap(([user, ids]) =>
+      ids.map((technology_id) => ({ user_id: user, technology_id })),
+    ),
   };
-  const ownerColumn: Record<string, string> = { profiles: 'id', subscriptions: 'user_id' };
+  const ownerColumn: Record<string, string> = {
+    profiles: 'id',
+    subscriptions: 'user_id',
+    user_technologies: 'user_id',
+  };
   const usage = new Map<string, Record<Feature, number>>(
     Object.entries(options.usage ?? {}).map(([user, counts]) => [
       user,
@@ -109,6 +118,11 @@ export function createFakeSupabase(options: FakeSupabaseOptions = {}) {
         },
         abortSignal: () => query,
         maybeSingle: () => settle(options.failure, () => query.filtered[0] ?? null),
+        // Awaiting the query itself returns every visible row (a list select).
+        then: <T>(
+          resolve: (value: Awaited<ReturnType<typeof settle>>) => T,
+          reject?: (reason: unknown) => T,
+        ) => settle(options.failure, () => query.filtered).then(resolve, reject),
       };
       return query;
     };

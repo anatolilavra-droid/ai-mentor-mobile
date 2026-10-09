@@ -1,3 +1,4 @@
+import { CHAT_HISTORY_DEFAULTS } from '@ai-mentor/shared';
 import { ApiError, FinishReason, type GenerateContentParameters } from '@google/genai';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
@@ -338,6 +339,7 @@ describe('Gemini structured output schema', () => {
       usageGuard: createSupabaseUsage(supabase.factory).guard,
       profileService: createProfileService(supabase.factory),
       aiTimeoutMs: 1_000,
+      historyLimits: CHAT_HISTORY_DEFAULTS,
     });
 
     await expect(

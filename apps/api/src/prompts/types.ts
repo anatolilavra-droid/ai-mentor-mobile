@@ -1,14 +1,23 @@
 import type { z } from 'zod';
 
-import type { ChatMessage } from '../services/ai/providers/AIProvider.js';
-import type { ExperienceLevel, PrimaryGoal, UiLanguage } from '../schemas/common.schema.js';
+import type { ExperienceLevel, PrimaryGoal, UiLanguage } from '@ai-mentor/shared';
 
-/** Learner context resolved on the server (request hints first, then the profile). */
+import type { ChatMessage } from '../services/ai/providers/AIProvider.js';
+
+/**
+ * Learner context resolved on the server (request hints first, then the
+ * profile and onboarding answers). Only enums, catalog ids and numbers: never
+ * the name or free-text goal details.
+ */
 export type LearnerContext = {
   level: ExperienceLevel | null;
   learningGoal: PrimaryGoal | null;
+  /** The technology this question is about (request hint). */
   technology: string | null;
   answerLanguage: UiLanguage;
+  /** Technologies picked in onboarding (catalog ids). */
+  technologies: readonly string[];
+  dailyMinutes: number | null;
 };
 
 type PromptBase<TId extends string, TVersion extends `v${number}`> = {

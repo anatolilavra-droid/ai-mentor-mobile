@@ -3,16 +3,15 @@
  * supabase/migrations. Keep in sync with every migration
  * (or regenerate with `supabase gen types typescript` once the CLI is available).
  */
-export type ExperienceLevel = 'beginner' | 'junior' | 'middle' | 'advanced';
-export type UiLanguage = 'ru' | 'en' | 'de';
-export type PrimaryGoal =
-  | 'learn_javascript'
-  | 'build_web_apps'
-  | 'prepare_for_job'
-  | 'improve_fundamentals'
-  | 'learn_react'
-  | 'personal_projects';
-export type TechnologyCategory = 'language' | 'frontend' | 'backend' | 'tools';
+import type {
+  ExperienceLevel,
+  PrimaryGoal,
+  TechnologyCategory,
+  UiLanguage,
+} from '@ai-mentor/shared';
+
+/** Enums shared with the API (@ai-mentor/shared). */
+export type { ExperienceLevel, PrimaryGoal, TechnologyCategory, UiLanguage };
 
 export type ProfileRow = {
   id: string;

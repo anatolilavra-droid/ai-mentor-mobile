@@ -1,14 +1,18 @@
+import {
+  experienceLevelSchema,
+  primaryGoalSchema,
+  uiLanguageSchema,
+  userIdSchema,
+} from '@ai-mentor/shared';
 import { z } from 'zod';
 
-import { experienceLevelSchema, primaryGoalSchema, uiLanguageSchema } from './common.schema.js';
-
-/** The columns /api/me reads from profiles. Listed explicitly, never `select('*')`. */
+/** The columns the API reads from profiles. Listed explicitly, never `select('*')`. */
 export const PROFILE_COLUMNS =
   'id, display_name, experience_level, primary_goal, daily_minutes, ui_language, onboarding_completed';
 
-/** A profiles row as PostgREST returns it. Validated: the database is an external source. */
+/** A profiles row as PostgREST returns it (server-only). Validated: the database is external. */
 export const profileRowSchema = z.object({
-  id: z.uuid(),
+  id: userIdSchema,
   display_name: z.string().nullable(),
   experience_level: experienceLevelSchema.nullable(),
   primary_goal: primaryGoalSchema.nullable(),
@@ -18,17 +22,3 @@ export const profileRowSchema = z.object({
 });
 
 export type ProfileRow = z.infer<typeof profileRowSchema>;
-
-export const meResponseSchema = z
-  .object({
-    userId: z.uuid(),
-    displayName: z.string().nullable(),
-    experienceLevel: experienceLevelSchema.nullable(),
-    primaryGoal: primaryGoalSchema.nullable(),
-    dailyMinutes: z.number().int().nullable(),
-    uiLanguage: uiLanguageSchema,
-    onboardingCompleted: z.boolean(),
-  })
-  .strict();
-
-export type MeResponse = z.infer<typeof meResponseSchema>;

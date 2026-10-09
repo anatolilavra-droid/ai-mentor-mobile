@@ -86,6 +86,8 @@ const learner: LearnerContext = {
   learningGoal: 'learn_javascript',
   technology: 'javascript',
   answerLanguage: 'en',
+  technologies: ['javascript'],
+  dailyMinutes: 30,
 };
 let failed = false;
 
@@ -95,7 +97,10 @@ out();
 /* 1. A fixed learning question through chat/v1. */
 try {
   const prompt = prompts.chat;
-  const built = prompt.build({ message: 'What is the difference between let and const?' }, learner);
+  const built = prompt.build(
+    { message: 'What is the difference between let and const?', history: [] },
+    learner,
+  );
   const startedAt = performance.now();
   const raw = await provider.generateText({
     ...built,

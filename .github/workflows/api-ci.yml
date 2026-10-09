@@ -1,4 +1,5 @@
-# Checks the AI backend (apps/api) on every push and pull request that touches it.
+# Checks the AI backend (apps/api) and the shared package on every push and pull request
+# that touches them.
 # No secrets or variables are needed: tests use a mock AI provider, a local JWKS
 # and a fake Supabase client. Nothing is deployed.
 
@@ -8,6 +9,7 @@ on:
   push:
     paths:
       - 'apps/api/**'
+      - 'packages/shared/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -16,6 +18,7 @@ on:
   pull_request:
     paths:
       - 'apps/api/**'
+      - 'packages/shared/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -57,13 +60,13 @@ jobs:
         run: pnpm format:check
 
       - name: Typecheck
-        run: pnpm --filter @ai-mentor/api typecheck
+        run: pnpm --filter @ai-mentor/shared --filter @ai-mentor/api typecheck
 
       - name: Lint
-        run: pnpm --filter @ai-mentor/api lint
+        run: pnpm --filter @ai-mentor/shared --filter @ai-mentor/api lint
 
       - name: Test
-        run: pnpm --filter @ai-mentor/api test
+        run: pnpm --filter @ai-mentor/shared --filter @ai-mentor/api test
 
       - name: Build
         run: pnpm --filter @ai-mentor/api build

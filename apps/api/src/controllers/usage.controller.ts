@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
 import { AppError } from '../errors/AppError.js';
-import type { SubscriptionResponse, UsageResponse } from '../schemas/usage.schema.js';
+import type { SubscriptionResponse, UsageResponse } from '@ai-mentor/shared';
 import type { SupabaseUsage } from '../services/usage/supabaseUsage.js';
 import type { UsageCaller } from '../services/usage/UsageGuard.js';
 

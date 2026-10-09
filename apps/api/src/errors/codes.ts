@@ -1,4 +1,8 @@
-/** Every error code the API can return, with its HTTP status. */
+import type { ErrorCode } from '@ai-mentor/shared';
+
+export type { ErrorCode };
+
+/** The HTTP status of every error code (server-only; the codes live in @ai-mentor/shared). */
 export const ERROR_STATUS = {
   VALIDATION_ERROR: 400,
   UNAUTHORIZED: 401,
@@ -14,11 +18,7 @@ export const ERROR_STATUS = {
   AI_INVALID_RESPONSE: 502,
   SERVICE_UNAVAILABLE: 503,
   TIMEOUT: 504,
-} as const;
-
-export type ErrorCode = keyof typeof ERROR_STATUS;
-
-export const ERROR_CODES = Object.keys(ERROR_STATUS) as [ErrorCode, ...ErrorCode[]];
+} as const satisfies Record<ErrorCode, number>;
 
 /** Safe, user-facing default messages. Never include internal details here. */
 export const DEFAULT_MESSAGES: Record<ErrorCode, string> = {

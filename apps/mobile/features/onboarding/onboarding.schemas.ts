@@ -1,3 +1,9 @@
+import {
+  DAILY_MINUTE_PRESETS,
+  TECHNOLOGIES_MAX,
+  TECHNOLOGIES_MIN,
+  TECHNOLOGY_ID_PATTERN,
+} from '@ai-mentor/shared';
 import { z } from 'zod';
 
 import {
@@ -14,9 +20,8 @@ import type { OnboardingMode, OnboardingStep } from './steps';
 
 const msg = (key: TranslationKey) => ({ error: key });
 
-export const TECHNOLOGIES_MIN = 1;
-export const TECHNOLOGIES_MAX = 8;
-export const MINUTE_PRESETS = [15, 30, 45, 60] as const;
+export { TECHNOLOGIES_MAX, TECHNOLOGIES_MIN };
+export const MINUTE_PRESETS = DAILY_MINUTE_PRESETS;
 
 const primaryGoalField = z.enum(PRIMARY_GOALS, msg('onboarding.validation.goalRequired'));
 
@@ -28,7 +33,7 @@ const customGoalDetailsField = z
   .transform((value) => (value.length === 0 ? null : value));
 
 const technologiesField = z
-  .array(z.string().regex(/^[a-z0-9-]{1,32}$/))
+  .array(z.string().regex(TECHNOLOGY_ID_PATTERN))
   .min(TECHNOLOGIES_MIN, msg('onboarding.validation.technologiesMin'))
   .max(TECHNOLOGIES_MAX, msg('onboarding.validation.technologiesMax'))
   .refine(

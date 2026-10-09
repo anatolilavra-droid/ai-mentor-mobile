@@ -1,0 +1,48 @@
+# Manual check of the deployed API from a phone: calls GET /health.
+# The URL comes from the run input or the repository variable EXPO_PUBLIC_API_URL
+# (a public address, not a secret). A free Render service may need up to a minute
+# to wake up, so the request waits up to 90 seconds.
+
+name: API live check
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'API base URL (leave empty to use the EXPO_PUBLIC_API_URL variable)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    name: GET /health
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      API_URL: ${{ inputs.api_url || vars.EXPO_PUBLIC_API_URL }}
+    steps:
+      - name: Call the health endpoint
+        run: |
+          if ! printf '%s' "$API_URL" | grep -Eq '^https://[A-Za-z0-9.-]+(:[0-9]+)?/?$'; then
+            echo "::error::Set an https base URL (run input or the EXPO_PUBLIC_API_URL variable)."
+            exit 1
+          fi
+          url="${API_URL%/}/health"
+          start=$(date +%s)
+          status=$(curl -sS -o body.json -w '%{http_code}' --max-time 90 "$url" || echo "000")
+          seconds=$(( $(date +%s) - start ))
+          {
+            echo "## API live check"
+            echo ""
+            echo "- URL: \`$url\`"
+            echo "- HTTP status: **$status** in ${seconds}s (a first call after sleep can take up to a minute)"
+            echo ""
+            echo '```json'
+            head -c 500 body.json 2>/dev/null || true
+            echo ""
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          test "$status" = "200"

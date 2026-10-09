@@ -1,0 +1,43 @@
+# Render Blueprint for the AI Mentor API (free plan, testing / portfolio).
+# Nothing deploys by itself: the service is created from this file in the Render
+# dashboard by the project owner, and later deploys are started manually.
+# Secret values are never stored here: `sync: false` makes Render ask for them.
+# Steps: apps/api/DEPLOYMENT.md
+
+services:
+  - type: web
+    name: ai-mentor-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    autoDeployTrigger: 'off'
+    # The workspace uses node-linker=hoisted (needed by Expo), so pnpm installs the
+    # whole workspace; only the API and @ai-mentor/shared are built and run.
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @ai-mentor/api build
+    startCommand: node apps/api/dist/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: TRUST_PROXY
+        value: '1'
+      - key: LOG_LEVEL
+        value: info
+      - key: AI_PROVIDER
+        value: gemini
+      # Entered in the Render dashboard (never committed):
+      - key: AI_MODEL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: AI_REAL_PROVIDER_USER_IDS
+        sync: false

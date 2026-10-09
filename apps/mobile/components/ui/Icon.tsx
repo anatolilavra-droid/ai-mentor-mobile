@@ -10,6 +10,7 @@ const iconColors = {
   accent: colors.accent.primary,
   accentSecondary: colors.accent.secondary,
   error: colors.status.error,
+  warning: colors.status.warning,
 } as const;
 
 export type IconColor = keyof typeof iconColors;

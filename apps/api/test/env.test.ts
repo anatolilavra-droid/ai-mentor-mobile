@@ -120,3 +120,23 @@ describe('parseEnv: AI provider settings', () => {
     expect(JSON.stringify(result)).not.toContain('gemini-secret-value');
   });
 });
+
+describe('parseEnv: hosting and history settings', () => {
+  it('listens on 0.0.0.0 with 12-message history by default', () => {
+    const result = parseEnv(valid);
+    expect(result.ok && result.env).toMatchObject({
+      HOST: '0.0.0.0',
+      JSON_BODY_LIMIT: '256kb',
+      CHAT_HISTORY_MAX_MESSAGES: 12,
+      CHAT_CONTEXT_MAX_CHARS: 24_000,
+      CHAT_HISTORY_MESSAGE_MAX_CHARS: 4_000,
+    });
+  });
+
+  it('accepts a custom history size and rejects out-of-range values', () => {
+    expect(parseEnv({ ...valid, CHAT_HISTORY_MAX_MESSAGES: '6' }).ok).toBe(true);
+    expect(parseEnv({ ...valid, CHAT_HISTORY_MAX_MESSAGES: '41' }).ok).toBe(false);
+    expect(parseEnv({ ...valid, CHAT_CONTEXT_MAX_CHARS: '70000' }).ok).toBe(false);
+    expect(parseEnv({ ...valid, HOST: 'bad host!' }).ok).toBe(false);
+  });
+});

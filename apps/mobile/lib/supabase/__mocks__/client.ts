@@ -142,6 +142,7 @@ function rpcImpl(name: string, args: RpcArgs = {}): Promise<{ data: null; error:
 export const supabase = {
   auth: {
     getSession: jest.fn(async () => ({ data: { session: fakeDb.session }, error: null })),
+    refreshSession: jest.fn(async () => ({ data: { session: fakeDb.session }, error: null })),
     onAuthStateChange: jest.fn((listener: Listener) => {
       listeners.add(listener);
       return { data: { subscription: { unsubscribe: () => listeners.delete(listener) } } };

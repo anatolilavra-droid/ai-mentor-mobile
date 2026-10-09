@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -21,6 +21,10 @@ type ScreenProps = {
   /** Add the bottom safe-area inset. Only for screens without the tab bar. */
   withBottomInset?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
+  /** Access to the scroll view, e.g. to keep the newest chat message in view. */
+  scrollRef?: Ref<ScrollView>;
+  /** Called when the scrollable content changes size. */
+  onContentSizeChange?: (width: number, height: number) => void;
   testID?: string;
 };
 
@@ -39,6 +43,8 @@ export function Screen({
   scroll = true,
   withBottomInset = false,
   contentStyle,
+  scrollRef,
+  onContentSizeChange,
   testID,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
@@ -64,6 +70,8 @@ export function Screen({
       >
         {scroll ? (
           <ScrollView
+            ref={scrollRef}
+            onContentSizeChange={onContentSizeChange}
             contentContainerStyle={content}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"

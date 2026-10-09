@@ -10,11 +10,13 @@ const learner: LearnerContext = {
   learningGoal: 'learn_react',
   technology: 'react',
   answerLanguage: 'de',
+  technologies: ['javascript', 'react'],
+  dailyMinutes: 20,
 };
 
 describe('prompts', () => {
   it('registers the current version of each feature', () => {
-    expect(prompts.chat.ref).toBe('chat/v1');
+    expect(prompts.chat.ref).toBe('chat/v2');
     expect(prompts.codeReview.ref).toBe('code-review/v1');
   });
 

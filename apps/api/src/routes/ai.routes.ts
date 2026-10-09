@@ -2,7 +2,7 @@ import { Router, type RequestHandler } from 'express';
 
 import { createChatHandler } from '../controllers/ai.controller.js';
 import { defineRoute } from '../lib/defineRoute.js';
-import { chatRequestSchema, chatResponseSchema } from '../schemas/chat.schema.js';
+import { chatRequestSchema, chatResponseSchema } from '@ai-mentor/shared';
 import { emptyQuerySchema } from '../schemas/common.schema.js';
 import type { AIService } from '../services/ai/ai.service.js';
 

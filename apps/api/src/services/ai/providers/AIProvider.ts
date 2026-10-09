@@ -1,3 +1,4 @@
+import type { AIProviderName } from '@ai-mentor/shared';
 import { z } from 'zod';
 
 import type { CodeLanguage, CodeReviewTask } from '../../../schemas/code-review.schema.js';
@@ -49,7 +50,7 @@ export const codeReviewResultSchema = z.object({
 });
 export type CodeReviewResult = z.infer<typeof codeReviewResultSchema>;
 
-export type AIProviderName = 'mock' | 'gemini';
+export type { AIProviderName };
 
 export interface AIProvider {
   readonly name: AIProviderName;

@@ -45,7 +45,7 @@ describe('logging', () => {
     const aiEntry = entries.find((entry) => entry.msg === 'ai call completed');
     expect(aiEntry).toMatchObject({
       requestId: res.headers['x-request-id'],
-      ai: { promptRef: 'chat/v1', provider: 'mock', model: 'mock-mentor-1' },
+      ai: { promptRef: 'chat/v2', provider: 'mock', model: 'mock-mentor-1' },
     });
     expect(JSON.stringify(aiEntry)).not.toContain('Hi"');
   });

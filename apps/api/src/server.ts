@@ -35,6 +35,11 @@ const app = createApp({
     rateLimitAi: { max: env.RATE_LIMIT_AI_MAX, windowMs: env.RATE_LIMIT_AI_WINDOW_MS },
     trustProxy: env.TRUST_PROXY,
     realAiUserIds: env.AI_REAL_PROVIDER_USER_IDS,
+    historyLimits: {
+      maxMessages: env.CHAT_HISTORY_MAX_MESSAGES,
+      maxChars: env.CHAT_CONTEXT_MAX_CHARS,
+      perMessageMax: env.CHAT_HISTORY_MESSAGE_MAX_CHARS,
+    },
   },
   logger,
   tokenVerifier: createJwksVerifier({ supabaseUrl: env.SUPABASE_URL }),
@@ -49,9 +54,10 @@ const app = createApp({
   ),
 });
 
-const server = app.listen(env.PORT, () => {
+const server = app.listen(env.PORT, env.HOST, () => {
   logger.info(
     {
+      host: env.HOST,
       port: env.PORT,
       version,
       aiProvider: env.AI_PROVIDER,

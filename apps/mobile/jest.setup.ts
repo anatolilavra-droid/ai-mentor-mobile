@@ -43,6 +43,10 @@ jest.mock('expo-linking', () => ({
   createURL: (path: string) => `aimentor://${path.replace(/^\//, '')}`,
 }));
 
+jest.mock('expo-clipboard', () => ({
+  setStringAsync: jest.fn(() => Promise.resolve(true)),
+}));
+
 jest.mock('expo-haptics', () => ({
   selectionAsync: jest.fn(() => Promise.resolve()),
   impactAsync: jest.fn(() => Promise.resolve()),

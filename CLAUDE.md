@@ -664,6 +664,26 @@ Observed latency: chat about 9 s, code review about 17 s (AI timeout 30 s).
   "AI smoke test" workflow. The model id comes from that workflow's listing,
   never guessed.
 
+Phase 5b: hosting and the chat screen — implemented, waiting for Anatoliy's
+review and the on-device check.
+- packages/shared (@ai-mentor/shared): platform-neutral Zod schemas, types
+  and constants used by apps/api and apps/mobile (enums and limits, chat
+  request/response, error format, plans and usage, trimConversationHistory).
+  No Node, React Native, env or server-only code; built to dist by `prepare`.
+  Never duplicate these schemas in an app.
+- Chat uses prompt chat/v2 with a short history: buildChatContext() in
+  apps/api/src/services/ai/chatContext.ts keeps the last
+  CHAT_HISTORY_MAX_MESSAGES (12) messages within CHAT_CONTEXT_MAX_CHARS
+  (24 000) and adds profile/onboarding context (level, goal, language,
+  minutes, technologies; never the name or free-text goal details).
+  Nothing is stored; conversations live in app memory only.
+- The app renders answers with its own small Markdown subset
+  (features/chat/markdown): Text and View only, no HTML, https links only
+  after a confirmation, size limits, copy button on code blocks.
+- render.yaml: Render Free, Frankfurt, autoDeployTrigger off, secrets as
+  `sync: false`. The deployment is created and started by Anatoliy only.
+  EXPO_PUBLIC_API_URL (public) points the app to the API.
+
 Next phase: not defined yet — wait for Anatoliy's instructions.
 
 Phase 3 scope (for reference):
