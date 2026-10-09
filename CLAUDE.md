@@ -642,8 +642,12 @@ Phase 5 is split because there is no payment method yet:
 - 5b: hosting without a payment card and the real chat screen in the app;
 - 5c: a paid AI provider and opening AI to real users.
 
-Phase 5a: AI usage limits and Gemini (testing) — implemented, waiting for
-Anatoliy's review.
+Phase 5a: AI usage limits and Gemini (testing) — completed (approved by
+Anatoliy). The migration is applied and supabase/tests/rls_usage.sql passes
+in the real database. The manual "AI smoke test" passed on real Gemini
+(chat and the schema-checked code review); the requested gemini-3.7-flash was
+served as gemini-3.8-flash, and the API logs the model that answered.
+Observed latency: chat about 9 s, code review about 17 s (AI timeout 30 s).
 - plan_limits, subscriptions and usage_counters with RLS
   (supabase/migrations/20261020000000_ai_usage.sql, tests/rls_usage.sql).
   Free: 30 chat + 10 code reviews per month; Pro: 500 + 200 (placeholders,
