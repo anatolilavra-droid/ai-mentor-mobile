@@ -10,8 +10,8 @@ const AVATAR_SIZE = spacing.huge;
 
 export function ProfileHeader({ profile, email }: { profile: Profile; email: string | undefined }) {
   const { t } = useTranslation();
-  const name = profile.display_name ?? '';
-  const initial = name.charAt(0).toUpperCase();
+  const name = profile.display_name ?? t('profile.unnamed');
+  const initial = (profile.display_name ?? '·').charAt(0).toUpperCase();
 
   return (
     <View style={styles.container}>

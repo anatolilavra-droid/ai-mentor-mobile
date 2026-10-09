@@ -51,10 +51,13 @@ for development; configure custom SMTP before a public release.
 SQL Editor → New query → paste each file from `migrations/` in name order → Run.
 Each file should end with `Success`.
 
-| File                                            | What it does                                                                             |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `20261010000000_create_profiles.sql`            | `profiles` table, sign-up trigger, `updated_at` trigger, RLS policies, column privileges |
-| `20261010010000_backfill_existing_profiles.sql` | creates profiles for accounts registered before the table existed; safe to run again     |
+| File                                            | What it does                                                                                                                    |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `20261010000000_create_profiles.sql`            | `profiles` table, sign-up trigger, `updated_at` trigger, RLS policies, column privileges                                        |
+| `20261010010000_backfill_existing_profiles.sql` | creates profiles for accounts registered before the table existed; safe to run again                                            |
+| `20261012000000_onboarding_profile_columns.sql` | Phase 3: `primary_goal`, `custom_goal_details`, `onboarding_completed`; Edit profile may change only name, minutes and language |
+| `20261012000100_technologies.sql`               | Phase 3: `technologies` catalog (seeded), `user_technologies` (1–8 per user, unique), RLS                                       |
+| `20261012000200_onboarding_functions.sql`       | Phase 3: `complete_onboarding`, `save_personalization`, `skip_onboarding` (one transaction each)                                |
 
 If you signed up in the app before applying the first migration, the second one
 creates your missing profile. Without it the app shows "Your profile could not load".
@@ -80,6 +83,9 @@ Known pitfalls:
 
 SQL Editor → paste `tests/rls_profiles.sql` → Run.
 Expected result: `RLS profiles: all checks passed`. The script rolls back, so it leaves no data.
+
+After the Phase 3 migrations, also run `tests/rls_onboarding.sql`.
+Expected result: `RLS onboarding: all checks passed`.
 
 Quick check without the full test:
 

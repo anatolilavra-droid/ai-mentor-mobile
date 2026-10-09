@@ -25,7 +25,7 @@ import { colors } from '@/constants/tokens';
 import { signOut } from '@/features/auth/auth.service';
 import { AuthProvider } from '@/features/auth/AuthProvider';
 import { useAuth } from '@/features/auth/useAuth';
-import { isProfileComplete } from '@/features/profile/profile.schemas';
+import { getOnboardingState } from '@/features/profile/profile.schemas';
 import { useProfileQuery } from '@/features/profile/useProfile';
 import { envResult } from '@/lib/env';
 import { applyUiLanguage } from '@/lib/i18n';
@@ -46,8 +46,10 @@ const stackOptions = {
 
 /**
  * Decides what the user may see:
- * signed out → (auth); signed in without a complete profile → (onboarding);
- * signed in with a complete profile → (tabs) and profile editing.
+ * signed out → (auth);
+ * signed in, onboarding pending → onboarding only;
+ * signed in, onboarding completed or skipped → (tabs), profile editing, and
+ * onboarding again ("Finish setup" / "Personalize your mentor").
  * The splash screen stays up until the stored session has been restored.
  */
 function RootNavigator() {
@@ -107,19 +109,19 @@ function RootNavigator() {
     );
   }
 
-  const profileComplete = isProfileComplete(profile.data);
+  const appUnlocked = signedIn && getOnboardingState(profile.data) !== 'pending';
 
   return (
     <Stack screenOptions={stackOptions}>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
-      <Stack.Protected guard={signedIn && !profileComplete}>
-        <Stack.Screen name="(onboarding)" />
-      </Stack.Protected>
-      <Stack.Protected guard={signedIn && profileComplete}>
+      <Stack.Protected guard={appUnlocked}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="profile-edit" options={{ presentation: 'modal' }} />
+      </Stack.Protected>
+      <Stack.Protected guard={signedIn}>
+        <Stack.Screen name="onboarding" />
       </Stack.Protected>
       <Stack.Screen name="+not-found" />
     </Stack>

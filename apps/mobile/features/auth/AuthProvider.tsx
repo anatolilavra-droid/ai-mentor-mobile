@@ -4,6 +4,7 @@ import { AppState, Platform } from 'react-native';
 
 import { queryClient } from '@/lib/query/queryClient';
 import { supabase } from '@/lib/supabase/client';
+import { useOnboardingDraftStore } from '@/stores/onboardingDraft.store';
 
 export type AuthStatus = 'initializing' | 'signedOut' | 'signedIn';
 
@@ -51,7 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!active) return;
       setSession(nextSession);
       setStatus(nextSession ? 'signedIn' : 'signedOut');
-      if (event === 'SIGNED_OUT') queryClient.clear();
+      if (event === 'SIGNED_OUT') {
+        queryClient.clear();
+        // Drafts may hold personal answers; do not leave them on a shared device.
+        useOnboardingDraftStore.getState().clearAll();
+      }
     });
 
     return () => {

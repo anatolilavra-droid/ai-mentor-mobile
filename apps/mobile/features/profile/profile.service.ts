@@ -3,8 +3,20 @@ import type { ProfileUpdate } from '@/types/database';
 
 import { profileRowSchema, type Profile } from './profile.schemas';
 
-const PROFILE_COLUMNS =
-  'id, display_name, experience_level, learning_goal, daily_minutes, ui_language, created_at, updated_at';
+const PROFILE_COLUMNS = [
+  'id',
+  'display_name',
+  'experience_level',
+  'primary_goal',
+  'custom_goal_details',
+  'daily_minutes',
+  'ui_language',
+  'onboarding_completed',
+  'onboarding_completed_at',
+  'onboarding_skipped_at',
+  'created_at',
+  'updated_at',
+].join(', ');
 
 export class ProfileRequestError extends Error {
   constructor(options?: { cause?: unknown }) {

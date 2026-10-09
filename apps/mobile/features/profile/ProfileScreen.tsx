@@ -1,15 +1,6 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import {
-  Globe,
-  Info,
-  LogOut,
-  MoonStar,
-  PenLine,
-  Smartphone,
-  Sparkles,
-  Target,
-} from 'lucide-react-native';
+import { Globe, Info, LogOut, MoonStar, PenLine, Smartphone, Sparkles } from 'lucide-react-native';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, View } from 'react-native';
@@ -26,6 +17,7 @@ import type { TranslationKey } from '@/lib/i18n';
 import { usePreferencesStore } from '@/stores/preferences.store';
 import { useToastStore } from '@/stores/toast.store';
 
+import { PersonalizationSection } from './components/PersonalizationSection';
 import { ProfileHeader } from './components/ProfileHeader';
 import { SettingsSection } from './components/SettingsSection';
 import { useCurrentProfile } from './useProfile';
@@ -83,13 +75,7 @@ export function ProfileScreen() {
       <ProfileHeader profile={profile} email={user?.email} />
 
       <View style={{ gap: spacing.lg }}>
-        <SettingsSection title={t('profile.learning')}>
-          <ListItem
-            icon={Target}
-            title={t('profile.goal')}
-            subtitle={profile.learning_goal ?? t('profile.goalEmpty')}
-          />
-        </SettingsSection>
+        <PersonalizationSection profile={profile} />
 
         <SettingsSection title={t('profile.preferences')}>
           <ListItem

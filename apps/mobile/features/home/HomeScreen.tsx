@@ -7,10 +7,12 @@ import { Screen } from '@/components/layout/Screen';
 import { AsyncView, LoadingState } from '@/components/states';
 import { Button } from '@/components/ui';
 import { spacing } from '@/constants/tokens';
+import { getOnboardingState } from '@/features/profile/profile.schemas';
 import { useCurrentProfile } from '@/features/profile/useProfile';
 import { useAsyncResource } from '@/hooks/useAsyncResource';
 
 import { ConceptPreview } from './components/ConceptPreview';
+import { FinishSetupCard } from './components/FinishSetupCard';
 import { HomeHero } from './components/HomeHero';
 import { NextStepCard } from './components/NextStepCard';
 import { QuickActions } from './components/QuickActions';
@@ -52,8 +54,12 @@ export function HomeScreen({ loadSummary = getHomeSummary }: HomeScreenProps) {
         {(summary) => (
           <View style={{ gap: spacing.xl }}>
             <View>
-              <HomeHero firstName={profile.display_name ?? ''} />
-              <NextStepCard step={summary.nextStep} />
+              <HomeHero firstName={profile.display_name} />
+              {getOnboardingState(profile) === 'skipped' ? (
+                <FinishSetupCard />
+              ) : (
+                <NextStepCard step={summary.nextStep} />
+              )}
             </View>
             <QuickActions />
             <ConceptPreview concept={summary.concept} />

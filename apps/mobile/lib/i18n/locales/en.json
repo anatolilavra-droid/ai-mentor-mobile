@@ -73,7 +73,19 @@
       "emptyDescription": "Useful mentor answers you save will live here."
     },
     "primaryAction": "Continue learning",
-    "loadingLabel": "Loading your day"
+    "loadingLabel": "Loading your day",
+    "greetingPlain": {
+      "morning": "Good morning.",
+      "afternoon": "Good afternoon.",
+      "evening": "Good evening.",
+      "night": "Still coding?"
+    },
+    "finishSetup": {
+      "label": "Finish setup",
+      "title": "Tune your mentor",
+      "description": "Tell your mentor your level, goal and technologies. It takes about a minute.",
+      "action": "Continue setup"
+    }
   },
   "learn": {
     "eyebrow": "Learning path",
@@ -140,7 +152,14 @@
     "goalEmpty": "No goal set yet",
     "dailyMinutesValue": "{{count}} min per day",
     "account": "Account",
-    "email": "Email"
+    "email": "Email",
+    "personalization": "Personalization",
+    "personalize": "Personalize your mentor",
+    "personalizeHint": "Level, goal and technologies",
+    "notSet": "Not set yet",
+    "unnamed": "Your profile",
+    "technologiesLoading": "Loading technologies",
+    "technologiesError": "Technologies could not load."
   },
   "notFound": {
     "eyebrow": "404",
@@ -261,7 +280,119 @@
     "eyebrow": "Profile setup",
     "title": "Tell your mentor about you.",
     "subtitle": "Explanations and plans will adapt to your level and your time.",
-    "submit": "Save and continue"
+    "submit": "Save and continue",
+    "step": "Step {{index}} of {{total}}",
+    "progressA11y": "Step {{index}} of {{total}}",
+    "back": "Back",
+    "skip": "Skip for now",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "change": "Change",
+    "restoring": "Restoring your answers",
+    "welcome": {
+      "eyebrow": "Personalize",
+      "title": "Tune your mentor.",
+      "subtitle": "Six quick questions. Your mentor will use them to explain things at your level, around your goal and your time.",
+      "duration": "About 1 minute",
+      "points": {
+        "level": "Explanations at your level",
+        "goal": "Focused on your main goal",
+        "time": "Sized to the time you have"
+      },
+      "start": "Start"
+    },
+    "skipConfirm": {
+      "title": "Skip for now?",
+      "message": "You can finish this later from Home or Profile. Your answers so far stay on this device.",
+      "confirm": "Skip"
+    },
+    "name": {
+      "title": "What should your mentor call you?",
+      "subtitle": "This name appears in your greetings."
+    },
+    "experience": {
+      "title": "Where are you right now?",
+      "subtitle": "Your mentor adjusts its explanations to this level."
+    },
+    "goal": {
+      "title": "What's your main goal?",
+      "subtitle": "Pick one. You can change it later.",
+      "options": {
+        "learn_javascript": "Learn JavaScript",
+        "build_web_apps": "Build web applications",
+        "prepare_for_job": "Prepare for a job",
+        "improve_fundamentals": "Improve coding fundamentals",
+        "learn_react": "Learn React",
+        "personal_projects": "Create personal projects"
+      },
+      "detailsLabel": "Tell us more",
+      "detailsPlaceholder": "For example: I want to build a portfolio site and apply for junior roles."
+    },
+    "time": {
+      "title": "How much time per day?",
+      "subtitle": "Short, steady sessions work best.",
+      "presetsLabel": "Quick picks",
+      "customLabel": "Or enter minutes",
+      "hint": "From 5 to 480 minutes."
+    },
+    "technologies": {
+      "title": "What do you want to work with?",
+      "subtitle": "Pick from 1 to 8 technologies.",
+      "counter": "{{count}} of {{max}} selected",
+      "needOne": "Pick at least one technology to continue.",
+      "limitReached": "You can pick up to {{max}}. Remove one to add another.",
+      "categories": {
+        "language": "Languages",
+        "frontend": "Frontend",
+        "backend": "Backend",
+        "tools": "Tools"
+      },
+      "loading": "Loading technologies",
+      "errorTitle": "Couldn't load technologies",
+      "errorMessage": "Check your connection and try again. Your other answers are saved.",
+      "emptyTitle": "No technologies available",
+      "emptyMessage": "The list is empty right now. Try again later."
+    },
+    "language": {
+      "title": "Interface language",
+      "subtitle": "Saved to your profile.",
+      "hint": "Russian and German translations are coming. The interface stays in English until then."
+    },
+    "summary": {
+      "title": "Here's your setup.",
+      "subtitle": "Check your answers, then save.",
+      "personalizeTitle": "Your updated setup.",
+      "save": "Save and start",
+      "saveChanges": "Save changes",
+      "rows": {
+        "name": "Name",
+        "experience": "Level",
+        "goal": "Main goal",
+        "details": "Goal details",
+        "time": "Time per day",
+        "technologies": "Technologies",
+        "language": "Language"
+      },
+      "noDetails": "None",
+      "minutes": "{{count}} min",
+      "errorNetwork": "No connection to the server. Your answers are saved on this device. Try again when you're online.",
+      "errorGeneric": "Your answers could not be saved. They're kept on this device. Try again.",
+      "retry": "Retry",
+      "saved": "Your mentor is tuned",
+      "personalizationSaved": "Personalization saved"
+    },
+    "validation": {
+      "goalRequired": "Choose your main goal.",
+      "detailsTooLong": "Keep the details under 500 characters.",
+      "technologiesMin": "Pick at least one technology.",
+      "technologiesMax": "Pick at most 8 technologies.",
+      "technologiesDuplicate": "Each technology can be picked only once."
+    },
+    "loadError": {
+      "title": "Couldn't load your answers",
+      "message": "Check your connection and try again."
+    },
+    "skipError": "Couldn't skip right now. Check your connection and try again."
   },
   "profileEdit": {
     "eyebrow": "Profile",

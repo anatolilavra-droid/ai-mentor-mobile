@@ -4,6 +4,7 @@ export { Divider } from './Divider';
 export { Icon, type IconColor } from './Icon';
 export { ListItem } from './ListItem';
 export { PressableScale, type PressableScaleProps } from './PressableScale';
+export { ProgressBar } from './ProgressBar';
 export { SectionHeader } from './SectionHeader';
 export { Inline, Stack } from './Stack';
 export { Surface, type SurfaceProps } from './Surface';

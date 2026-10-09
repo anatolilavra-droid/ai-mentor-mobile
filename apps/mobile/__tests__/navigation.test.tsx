@@ -28,12 +28,13 @@ describe('auth guards', () => {
     expect(screen.getByText(/Anatoliy/)).toBeOnTheScreen();
   });
 
-  it('asks a new user to complete the profile before the tabs', async () => {
+  it('sends a new user to onboarding, with the tabs closed', async () => {
     fake.fakeDb.session = testSession;
     fake.fakeDb.profile = { ...newProfile };
-    renderRouter('./app', { initialUrl: '/' });
-    expect(await screen.findByTestId('profile-setup-screen', {}, TIMEOUT)).toBeOnTheScreen();
+    const router = renderRouter('./app', { initialUrl: '/profile' });
+    expect(await screen.findByTestId('onboarding-welcome', {}, TIMEOUT)).toBeOnTheScreen();
     expect(screen.queryByTestId('tab-bar')).toBeNull();
+    expect(router.getPathname()).toBe('/onboarding');
   });
 
   it('shows an error with retry when the profile cannot load', async () => {
@@ -61,28 +62,6 @@ describe('auth guards', () => {
     expect(screen.queryByTestId('route-error')).toBeNull();
     expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
-  });
-});
-
-describe('profile setup', () => {
-  it('saves the profile and opens the tabs', async () => {
-    fake.fakeDb.session = testSession;
-    fake.fakeDb.profile = { ...newProfile };
-    renderRouter('./app', { initialUrl: '/' });
-    expect(await screen.findByTestId('profile-setup-screen', {}, TIMEOUT)).toBeOnTheScreen();
-
-    fireEvent.changeText(screen.getByTestId('profile-display-name'), 'Anatoliy');
-    fireEvent.press(screen.getByTestId('profile-level-middle'));
-    fireEvent.press(screen.getByTestId('profile-minutes-preset-60'));
-    fireEvent.press(screen.getByTestId('profile-form-submit'));
-
-    expect(await screen.findByTestId('next-step-card', {}, TIMEOUT)).toBeOnTheScreen();
-    expect(fake.fakeDb.profile).toMatchObject({
-      display_name: 'Anatoliy',
-      experience_level: 'middle',
-      daily_minutes: 60,
-      learning_goal: null,
-    });
   });
 });
 

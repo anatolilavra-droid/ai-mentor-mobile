@@ -26,17 +26,41 @@ export const completeProfile: ProfileRow = {
   id: USER_ID,
   display_name: 'Anatoliy',
   experience_level: 'junior',
-  learning_goal: 'Build my first React Native app',
+  primary_goal: 'learn_react',
+  custom_goal_details: 'Build my first React Native app',
   daily_minutes: 45,
   ui_language: 'en',
+  onboarding_completed: true,
+  onboarding_completed_at: '2026-10-12T08:00:00.000Z',
+  onboarding_skipped_at: null,
   created_at: '2026-10-10T08:00:00.000Z',
   updated_at: '2026-10-10T08:00:00.000Z',
 };
 
+export const completeTechnologies = ['react', 'typescript'];
+
+/** Just signed up: onboarding pending, nothing answered. */
 export const newProfile: ProfileRow = {
   ...completeProfile,
   display_name: null,
   experience_level: null,
-  learning_goal: null,
+  primary_goal: null,
+  custom_goal_details: null,
   daily_minutes: null,
+  onboarding_completed: false,
+  onboarding_completed_at: null,
+};
+
+/** Chose "Skip for now". */
+export const skippedProfile: ProfileRow = {
+  ...newProfile,
+  onboarding_skipped_at: '2026-10-12T09:00:00.000Z',
+};
+
+/** Phase 2 account after the migration: basics answered, goal and technologies missing. */
+export const phase2Profile: ProfileRow = {
+  ...completeProfile,
+  primary_goal: null,
+  onboarding_completed: false,
+  onboarding_completed_at: null,
 };

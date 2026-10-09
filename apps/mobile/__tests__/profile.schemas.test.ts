@@ -1,31 +1,35 @@
 import {
-  isProfileComplete,
-  profileFormSchema,
-  type ProfileFormInput,
+  editProfileSchema,
+  getOnboardingState,
+  type EditProfileInput,
 } from '@/features/profile/profile.schemas';
 
-import { completeProfile, newProfile } from './fixtures';
+import { completeProfile, newProfile, phase2Profile, skippedProfile } from './fixtures';
 
-const valid: ProfileFormInput = {
+const valid: EditProfileInput = {
   display_name: 'Anatoliy',
-  experience_level: 'junior',
   daily_minutes: '45',
-  learning_goal: '',
   ui_language: 'en',
 };
 
-const errorFor = (patch: Partial<ProfileFormInput>) =>
-  profileFormSchema.safeParse({ ...valid, ...patch }).error?.issues[0]?.message;
+const errorFor = (patch: Partial<EditProfileInput>) =>
+  editProfileSchema.safeParse({ ...valid, ...patch }).error?.issues[0]?.message;
 
-describe('profile form schema', () => {
-  it('converts form strings into the database update', () => {
-    expect(profileFormSchema.parse({ ...valid, display_name: '  Anatoliy  ' })).toEqual({
+describe('edit profile schema', () => {
+  it('converts form strings into the allowed profile update', () => {
+    expect(editProfileSchema.parse({ ...valid, display_name: '  Anatoliy  ' })).toEqual({
       display_name: 'Anatoliy',
-      experience_level: 'junior',
       daily_minutes: 45,
-      learning_goal: null,
       ui_language: 'en',
     });
+  });
+
+  it('contains only display name, daily minutes and language', () => {
+    expect(Object.keys(editProfileSchema.shape).sort()).toEqual([
+      'daily_minutes',
+      'display_name',
+      'ui_language',
+    ]);
   });
 
   it.each(['Анатолий', "O'Neil", 'Ana-Maria Li', 'dev_42', 'Jürgen'])(
@@ -58,26 +62,19 @@ describe('profile form schema', () => {
     expect(errorFor({ daily_minutes: minutes })).toBeUndefined();
   });
 
-  it('treats the learning goal as optional but meaningful', () => {
-    expect(errorFor({ learning_goal: 'React' })).toBe('profileForm.validation.goalTooShort');
-    expect(errorFor({ learning_goal: 'x'.repeat(281) })).toBe('profileForm.validation.goalTooLong');
-    expect(errorFor({ learning_goal: 'Ship my first React Native app' })).toBeUndefined();
-  });
-
-  it('requires an experience level and a supported language', () => {
-    expect(errorFor({ experience_level: 'expert' as never })).toBe(
-      'profileForm.validation.levelRequired',
-    );
+  it('requires a supported language', () => {
     expect(errorFor({ ui_language: 'fr' as never })).toBe(
       'profileForm.validation.languageRequired',
     );
   });
 });
 
-describe('isProfileComplete', () => {
-  it('is false until name, level and minutes are set', () => {
-    expect(isProfileComplete(undefined)).toBe(false);
-    expect(isProfileComplete(newProfile)).toBe(false);
-    expect(isProfileComplete({ ...completeProfile, learning_goal: null })).toBe(true);
+describe('getOnboardingState', () => {
+  it('derives pending, skipped and completed', () => {
+    expect(getOnboardingState(undefined)).toBe('pending');
+    expect(getOnboardingState(newProfile)).toBe('pending');
+    expect(getOnboardingState(phase2Profile)).toBe('pending');
+    expect(getOnboardingState(skippedProfile)).toBe('skipped');
+    expect(getOnboardingState(completeProfile)).toBe('completed');
   });
 });

@@ -7,7 +7,7 @@ import { haptics } from '@/lib/haptics';
 import { useToastStore } from '@/stores/toast.store';
 
 import { ProfileFormScreen } from './components/ProfileFormScreen';
-import { toProfileFormDefaults } from './profile.schemas';
+import { toEditProfileDefaults } from './profile.schemas';
 import { useCurrentProfile, useUpdateProfile } from './useProfile';
 
 export function EditProfileScreen() {
@@ -25,7 +25,7 @@ export function EditProfileScreen() {
       title={t('profileEdit.title')}
       submitLabel={t('profileEdit.submit')}
       submitIcon={Check}
-      defaultValues={toProfileFormDefaults(profile)}
+      defaultValues={toEditProfileDefaults(profile)}
       onSubmit={async (values) => {
         await mutateAsync(values);
         haptics.success();

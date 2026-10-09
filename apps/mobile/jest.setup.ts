@@ -56,6 +56,14 @@ beforeEach(() => {
     resetFakeSupabase: () => void;
   };
   resetFakeSupabase();
+  // Onboarding drafts persist in a module-level store; start every test empty.
+  (
+    jest.requireActual(
+      '@/stores/onboardingDraft.store',
+    ) as typeof import('@/stores/onboardingDraft.store')
+  ).useOnboardingDraftStore
+    .getState()
+    .clearAll();
   // The app-wide query cache is a module singleton; start every test empty.
   (
     jest.requireActual('@/lib/query/queryClient') as typeof import('@/lib/query/queryClient')

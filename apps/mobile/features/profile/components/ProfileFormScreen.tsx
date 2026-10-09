@@ -8,20 +8,16 @@ import { InlineMessage } from '@/components/feedback/InlineMessage';
 import { Screen } from '@/components/layout/Screen';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button, ChoiceGroup, Stack, TextField } from '@/components/ui';
+import { MinutesField } from '@/features/onboarding/components/MinutesField';
 import { useErrorText } from '@/hooks/useErrorText';
 
 import {
-  DAILY_MINUTES_MAX,
   DISPLAY_NAME_MAX,
-  EXPERIENCE_LEVELS,
-  LEARNING_GOAL_MAX,
   UI_LANGUAGES,
-  profileFormSchema,
-  type ProfileFormInput,
-  type ProfileFormOutput,
+  editProfileSchema,
+  type EditProfileInput,
+  type EditProfileOutput,
 } from '../profile.schemas';
-
-const MINUTE_PRESETS = [15, 30, 45, 60, 90, 120] as const;
 
 type ProfileFormScreenProps = {
   eyebrow: string;
@@ -29,14 +25,17 @@ type ProfileFormScreenProps = {
   subtitle?: string;
   submitLabel: string;
   submitIcon: LucideIcon;
-  defaultValues: DefaultValues<ProfileFormInput>;
-  onSubmit: (values: ProfileFormOutput) => Promise<void>;
+  defaultValues: DefaultValues<EditProfileInput>;
+  onSubmit: (values: EditProfileOutput) => Promise<void>;
   /** Extra footer action under the primary button (e.g. Cancel). */
   secondaryAction?: ReactNode;
   testID?: string;
 };
 
-/** Profile fields shared by first-time setup and editing. */
+/**
+ * Quick profile edit: display name, daily minutes and interface language.
+ * Level, goal and technologies are changed in "Personalize your mentor".
+ */
 export function ProfileFormScreen({
   eyebrow,
   title,
@@ -56,8 +55,8 @@ export function ProfileFormScreen({
     control,
     handleSubmit,
     formState: { isSubmitting },
-  } = useForm<ProfileFormInput, unknown, ProfileFormOutput>({
-    resolver: zodResolver(profileFormSchema),
+  } = useForm<EditProfileInput, unknown, EditProfileOutput>({
+    resolver: zodResolver(editProfileSchema),
     defaultValues,
     mode: 'onTouched',
   });
@@ -123,72 +122,14 @@ export function ProfileFormScreen({
 
         <Controller
           control={control}
-          name="experience_level"
-          render={({ field, fieldState }) => (
-            <ChoiceGroup
-              label={t('profileForm.experienceLevel')}
-              layout="list"
-              value={field.value}
-              onChange={field.onChange}
-              error={errorText(fieldState.error?.message)}
-              options={EXPERIENCE_LEVELS.map((level) => ({
-                value: level,
-                label: t(`profileForm.levels.${level}`),
-                description: t(`profileForm.levelHints.${level}`),
-              }))}
-              testID="profile-level"
-            />
-          )}
-        />
-
-        <Controller
-          control={control}
           name="daily_minutes"
           render={({ field, fieldState }) => (
-            <Stack gap="xs">
-              <ChoiceGroup
-                label={t('profileForm.dailyMinutes')}
-                value={Number(field.value) || null}
-                onChange={(minutes) => field.onChange(String(minutes))}
-                options={MINUTE_PRESETS.map((minutes) => ({
-                  value: minutes,
-                  label: t('profileForm.minutesOption', { count: minutes }),
-                }))}
-                testID="profile-minutes-preset"
-              />
-              <TextField
-                ref={field.ref}
-                label={t('profileForm.dailyMinutes')}
-                hint={t('profileForm.dailyMinutesHint')}
-                value={field.value}
-                onChangeText={field.onChange}
-                onBlur={field.onBlur}
-                error={errorText(fieldState.error?.message)}
-                keyboardType="number-pad"
-                maxLength={String(DAILY_MINUTES_MAX).length}
-                returnKeyType="done"
-                testID="profile-minutes"
-              />
-            </Stack>
-          )}
-        />
-
-        <Controller
-          control={control}
-          name="learning_goal"
-          render={({ field, fieldState }) => (
-            <TextField
-              ref={field.ref}
-              label={`${t('profileForm.learningGoal')} · ${t('common.optional')}`}
-              placeholder={t('profileForm.learningGoalPlaceholder')}
+            <MinutesField
               value={field.value}
-              onChangeText={field.onChange}
+              onChange={field.onChange}
               onBlur={field.onBlur}
               error={errorText(fieldState.error?.message)}
-              multiline
-              maxLength={LEARNING_GOAL_MAX}
-              showCounter
-              testID="profile-goal"
+              testID="profile-minutes"
             />
           )}
         />

@@ -601,9 +601,51 @@ restoration after restart, profile setup and profile editing.
 Still to verify on a device: the password reset flow and the full
 supabase/tests/rls_profiles.sql run.
 
-Phase 3: not defined yet. Wait for Anatoliy's Phase 3 scope before
-implementing new features. Until then, only fixes and maintenance of the
-Phase 1 and Phase 2 scope are allowed.
+Phase 3: Onboarding and Personalization — current.
+
+Goal: collect onboarding answers for future AI mentor personalization.
+
+Implement only:
+- an onboarding flow: name, experience level, one main learning goal,
+  optional goal details, daily minutes, 1 to 8 technologies, interface
+  language, and a summary screen;
+- a progress indicator, back navigation and a skip option;
+- a local draft saved after every step (answers and current step),
+  restored after the app is closed, cleared only after a successful save;
+- one atomic save to Supabase with Retry on failure;
+- the technologies catalog and user_technologies, with RLS;
+- onboarding_completed on profiles;
+- "Personalize your mentor" in Profile, reopening onboarding with the
+  current answers (level, goal, goal details, technologies);
+- Edit profile limited to display_name, ui_language and daily_minutes.
+
+Rules:
+- primary goal: exactly one of learn_javascript, build_web_apps,
+  prepare_for_job, improve_fundamentals, learn_react, personal_projects;
+- custom_goal_details: optional, 0 to 500 characters, stored separately;
+- daily_minutes: 5 to 480, quick picks 15, 30, 45 and 60;
+- technologies: 1 to 8, no duplicates;
+- ui_language is saved; the interface stays English only (no ru/de translations).
+
+Do not implement in Phase 3:
+- AI API;
+- learning plan generation;
+- payments;
+- GitHub integration;
+- push notifications.
+
+Definition of done for Phase 3:
+- a new user completes onboarding and the answers are in profiles and
+  user_technologies;
+- validation blocks invalid answers with clear messages;
+- closing the app mid-flow keeps the answers and resumes at the same step;
+- a failed save keeps the draft and offers Retry;
+- skipping works and onboarding can be finished later;
+- "Personalize your mentor" loads and saves the current answers;
+- supabase/tests/rls_onboarding.sql passes;
+- TypeScript checks, lint and tests pass;
+- the preview APK is checked on a physical Android device;
+- the diff is reviewed and Anatoliy approves the result.
 
 Phase 2 scope (for reference):
 - Supabase Auth with email and password;
@@ -629,7 +671,6 @@ Profile fields:
 Do not implement yet:
 - AI API;
 - payments;
-- technologies and user_technologies;
 - GitHub integration;
 - push notifications;
 - Express backend;
