@@ -4,9 +4,9 @@ A premium, dark-first mobile AI mentor for beginner and junior developers:
 learn programming, understand errors, review code, follow a personal
 learning plan, and keep projects and useful answers in one place.
 
-> **Status:** Phase 1 — Mobile Foundation. The app shell, navigation and
-> design system are in place. AI, accounts, data sync and payments are
-> intentionally not implemented yet.
+> **Status:** Phase 2 — Authentication and User Profile. Email and password
+> accounts (Supabase Auth), secure session storage, protected routes and an
+> editable learner profile. AI and payments are intentionally not implemented yet.
 
 ## Tech stack
 
@@ -14,7 +14,9 @@ learning plan, and keep projects and useful answers in one place.
 - Expo Router (file-based navigation, custom bottom tab bar)
 - Reanimated (purposeful motion, respects reduced motion)
 - i18next (English UI, ready for more languages)
-- Zustand (local UI state only)
+- Supabase Auth + PostgreSQL with Row Level Security
+- TanStack Query (server state), Zustand (local UI state only)
+- React Hook Form + Zod (forms and validation)
 - Jest + React Native Testing Library
 
 ## Repository structure
@@ -39,6 +41,17 @@ apps/
 - pnpm (enable with `corepack enable`)
 - Expo Go on an Android phone (Google Play), updated to the latest version
 
+## Supabase setup
+
+Follow [`supabase/README.md`](supabase/README.md): create the project, apply the
+migration, run the RLS check, and copy the project URL and publishable key.
+
+```bash
+cp apps/mobile/.env.example apps/mobile/.env   # then fill in both values
+```
+
+`.env` is ignored by Git. Never put a `service_role` / secret key in the app.
+
 ## Getting started
 
 ```bash
@@ -59,6 +72,18 @@ pnpm --filter @ai-mentor/mobile start --tunnel
 adb reverse tcp:8081 tcp:8081
 pnpm --filter @ai-mentor/mobile start --localhost  # then press "a"
 ```
+
+## Android preview APK (no computer needed)
+
+The **Android preview APK** workflow builds an installable APK on GitHub.
+
+1. Once: Settings → Secrets and variables → Actions → **Variables** → add
+   `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+2. Actions → **Android preview APK** → **Run workflow**.
+3. When it finishes, download **ai-mentor-preview-apk** from the run, open the
+   .zip on the phone and install the APK.
+
+The APK is a personal preview signed with a debug key. It is never published to Google Play.
 
 ## Quality checks
 

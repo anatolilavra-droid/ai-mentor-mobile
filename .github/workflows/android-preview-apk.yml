@@ -1,0 +1,107 @@
+# Builds an installable Android preview APK for testing on a phone.
+# Manual trigger only. Nothing is published to Google Play.
+#
+# Required repository variables (Settings → Secrets and variables → Actions → Variables):
+#   EXPO_PUBLIC_SUPABASE_URL
+#   EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+# Both are public values (protected by RLS). Never add a service_role key here.
+
+name: Android preview APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-preview-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Check and build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      NODE_ENV: production
+
+    steps:
+      - name: Check required variables
+        run: |
+          missing=""
+          [ -z "$EXPO_PUBLIC_SUPABASE_URL" ] && missing="$missing EXPO_PUBLIC_SUPABASE_URL"
+          [ -z "$EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY" ] && missing="$missing EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository variables:$missing (Settings → Secrets and variables → Actions → Variables)"
+            exit 1
+          fi
+
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+      - name: Generate the Android project
+        working-directory: apps/mobile
+        run: pnpm exec expo prebuild --platform android --no-install --clean
+
+      - name: Build release APK (arm64)
+        working-directory: apps/mobile/android
+        # Expo's template signs release builds with the debug key: fine for a
+        # personal preview, not for Google Play. arm64-v8a covers modern phones.
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+
+      - name: Name the APK
+        id: apk
+        run: |
+          name="ai-mentor-preview-${GITHUB_RUN_NUMBER}-${GITHUB_SHA::7}.apk"
+          mv apps/mobile/android/app/build/outputs/apk/release/app-release.apk "$name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-mentor-preview-apk
+          path: ${{ steps.apk.outputs.name }}
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Install instructions
+        run: |
+          {
+            echo "## AI Mentor preview APK"
+            echo ""
+            echo "1. Download **ai-mentor-preview-apk** from the Artifacts section of this run (a .zip)."
+            echo "2. Open the .zip on your Android phone and tap \`${{ steps.apk.outputs.name }}\`."
+            echo "3. Allow installing apps from this source when Android asks."
+            echo ""
+            echo "Preview build, signed with a debug key. Not for Google Play."
+          } >> "$GITHUB_STEP_SUMMARY"

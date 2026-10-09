@@ -1,25 +1,44 @@
 import Constants from 'expo-constants';
-import { Globe, Info, MoonStar, PenLine, Smartphone, Sparkles } from 'lucide-react-native';
+import { router } from 'expo-router';
+import {
+  Globe,
+  Info,
+  LogOut,
+  MoonStar,
+  PenLine,
+  Smartphone,
+  Sparkles,
+  Target,
+} from 'lucide-react-native';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 
+import { InlineMessage } from '@/components/feedback/InlineMessage';
 import { Screen } from '@/components/layout/Screen';
-import { ListItem, Switch, Tag } from '@/components/ui';
+import { Button, ListItem, Switch, Tag } from '@/components/ui';
 import { spacing } from '@/constants/tokens';
-import { ComingSoonFooter } from '@/features/shared/ComingSoonFooter';
+import { toAuthActionError } from '@/features/auth/auth.errors';
+import { signOut } from '@/features/auth/auth.service';
+import { useAuth } from '@/features/auth/useAuth';
 import { haptics } from '@/lib/haptics';
+import type { TranslationKey } from '@/lib/i18n';
 import { usePreferencesStore } from '@/stores/preferences.store';
 import { useToastStore } from '@/stores/toast.store';
 
 import { ProfileHeader } from './components/ProfileHeader';
 import { SettingsSection } from './components/SettingsSection';
-import { profileMock } from './profile.mock';
+import { useCurrentProfile } from './useProfile';
 
 export function ProfileScreen() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const profile = useCurrentProfile();
   const hapticsEnabled = usePreferencesStore((state) => state.hapticsEnabled);
   const setHapticsEnabled = usePreferencesStore((state) => state.setHapticsEnabled);
   const showToast = useToastStore((state) => state.show);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<TranslationKey | null>(null);
   const version = Constants.expoConfig?.version ?? '—';
 
   const onToggleHaptics = (enabled: boolean) => {
@@ -28,20 +47,55 @@ export function ProfileScreen() {
     showToast(t('profile.saved'));
   };
 
+  const performSignOut = async () => {
+    setSignOutError(null);
+    setSigningOut(true);
+    try {
+      await signOut();
+      showToast(t('auth.signOut.done'));
+      // The auth guard returns the user to sign in.
+    } catch (error) {
+      setSignOutError(toAuthActionError(error).messageKey);
+      setSigningOut(false);
+    }
+  };
+
+  const confirmSignOut = () => {
+    Alert.alert(t('auth.signOut.confirmTitle'), t('auth.signOut.confirmMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('auth.signOut.action'), style: 'destructive', onPress: performSignOut },
+    ]);
+  };
+
   return (
     <Screen
       testID="profile-screen"
-      footer={<ComingSoonFooter label={t('profile.primaryAction')} icon={PenLine} />}
+      footer={
+        <Button
+          label={t('profile.primaryAction')}
+          leadingIcon={PenLine}
+          fullWidth
+          onPress={() => router.push('/profile-edit')}
+          testID="profile-edit-action"
+        />
+      }
     >
-      <ProfileHeader name={profileMock.name} stack={profileMock.stack} />
+      <ProfileHeader profile={profile} email={user?.email} />
 
       <View style={{ gap: spacing.lg }}>
+        <SettingsSection title={t('profile.learning')}>
+          <ListItem
+            icon={Target}
+            title={t('profile.goal')}
+            subtitle={profile.learning_goal ?? t('profile.goalEmpty')}
+          />
+        </SettingsSection>
+
         <SettingsSection title={t('profile.preferences')}>
           <ListItem
             icon={Globe}
             title={t('profile.language')}
-            subtitle={t('profile.languageHint')}
-            value={t('profile.languageValue')}
+            value={t(`profileForm.languages.${profile.ui_language}`)}
           />
           <ListItem
             icon={Smartphone}
@@ -71,6 +125,19 @@ export function ProfileScreen() {
             trailing={<Tag label={t('profile.planFree')} tone="violet" />}
           />
         </SettingsSection>
+
+        <SettingsSection title={t('profile.account')}>
+          <ListItem
+            icon={LogOut}
+            title={t('auth.signOut.action')}
+            onPress={signingOut ? undefined : confirmSignOut}
+            disabled={signingOut}
+            testID="sign-out"
+          />
+        </SettingsSection>
+        {signOutError ? (
+          <InlineMessage tone="error" message={t(signOutError)} testID="sign-out-error" />
+        ) : null}
       </View>
     </Screen>
   );

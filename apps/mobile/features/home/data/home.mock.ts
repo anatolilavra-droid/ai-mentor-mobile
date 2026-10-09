@@ -2,7 +2,6 @@ import type { HomeSummary } from '../types';
 
 /** Static Phase 1 data. Replaced by the API in a later phase. */
 export const homeSummaryMock: HomeSummary = {
-  firstName: 'Anatoliy',
   nextStep: {
     topic: 'Understand async / await',
     track: 'JavaScript Foundations',

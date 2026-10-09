@@ -10,3 +10,5 @@ export { Surface, type SurfaceProps } from './Surface';
 export { Switch } from './Switch';
 export { Tag } from './Tag';
 export { Text, type TextColor, type TextProps } from './Text';
+export { ChoiceGroup, type ChoiceOption } from './ChoiceGroup';
+export { TextField, type TextFieldProps } from './TextField';

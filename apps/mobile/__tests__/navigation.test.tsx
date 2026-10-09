@@ -1,16 +1,97 @@
-import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+
+import { completeProfile, newProfile, testSession } from './fixtures';
 
 /**
- * Integration test: renders the real route files with Expo Router and
- * walks through every tab, like a user would.
+ * Integration tests: the real route files and guards, with the Supabase fake.
  */
-describe('app navigation', () => {
-  it('opens Home first and reaches every tab', async () => {
-    const router = renderRouter('./app', { initialUrl: '/' });
+type FakeSupabase = typeof import('@/lib/supabase/__mocks__/client');
+const fake = jest.requireMock('@/lib/supabase/client') as FakeSupabase;
 
-    // Home resolves its local data, then shows real content.
-    expect(await screen.findByTestId('next-step-card', {}, { timeout: 3000 })).toBeOnTheScreen();
-    expect(router.getPathname()).toBe('/');
+// The first render cold-starts Expo Router; leave room on a loaded CI machine.
+const TIMEOUT = { timeout: 10000 };
+jest.setTimeout(30000);
+
+describe('auth guards', () => {
+  it('sends a signed-out user to sign in, even from a protected URL', async () => {
+    renderRouter('./app', { initialUrl: '/profile' });
+    expect(await screen.findByTestId('sign-in-screen', {}, TIMEOUT)).toBeOnTheScreen();
+    expect(screen.queryByTestId('profile-screen')).toBeNull();
+    expect(screen.queryByTestId('tab-bar')).toBeNull();
+  });
+
+  it('restores a stored session and opens the app', async () => {
+    fake.fakeDb.session = testSession;
+    fake.fakeDb.profile = { ...completeProfile };
+    renderRouter('./app', { initialUrl: '/' });
+    expect(await screen.findByTestId('next-step-card', {}, TIMEOUT)).toBeOnTheScreen();
+    expect(screen.getByText(/Anatoliy/)).toBeOnTheScreen();
+  });
+
+  it('asks a new user to complete the profile before the tabs', async () => {
+    fake.fakeDb.session = testSession;
+    fake.fakeDb.profile = { ...newProfile };
+    renderRouter('./app', { initialUrl: '/' });
+    expect(await screen.findByTestId('profile-setup-screen', {}, TIMEOUT)).toBeOnTheScreen();
+    expect(screen.queryByTestId('tab-bar')).toBeNull();
+  });
+
+  it('shows an error with retry when the profile cannot load', async () => {
+    fake.fakeDb.session = testSession;
+    fake.fakeDb.profileError = new Error('offline');
+    renderRouter('./app', { initialUrl: '/' });
+    expect(await screen.findByTestId('profile-load-error', {}, TIMEOUT)).toBeOnTheScreen();
+
+    fake.fakeDb.profileError = null;
+    fake.fakeDb.profile = { ...completeProfile };
+    fireEvent.press(screen.getByTestId('profile-load-retry'));
+    expect(await screen.findByTestId('next-step-card', {}, TIMEOUT)).toBeOnTheScreen();
+  });
+
+  it('returns to sign in after signing out', async () => {
+    fake.fakeDb.session = testSession;
+    fake.fakeDb.profile = { ...completeProfile };
+    renderRouter('./app', { initialUrl: '/' });
+    expect(await screen.findByTestId('next-step-card', {}, TIMEOUT)).toBeOnTheScreen();
+
+    const consoleError = jest.spyOn(console, 'error');
+    act(() => fake.emitAuthChange('SIGNED_OUT', null));
+    expect(await screen.findByTestId('sign-in-screen', {}, TIMEOUT)).toBeOnTheScreen();
+    // Signed-in screens must leave without a render error (the profile cache is cleared).
+    expect(screen.queryByTestId('route-error')).toBeNull();
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+});
+
+describe('profile setup', () => {
+  it('saves the profile and opens the tabs', async () => {
+    fake.fakeDb.session = testSession;
+    fake.fakeDb.profile = { ...newProfile };
+    renderRouter('./app', { initialUrl: '/' });
+    expect(await screen.findByTestId('profile-setup-screen', {}, TIMEOUT)).toBeOnTheScreen();
+
+    fireEvent.changeText(screen.getByTestId('profile-display-name'), 'Anatoliy');
+    fireEvent.press(screen.getByTestId('profile-level-middle'));
+    fireEvent.press(screen.getByTestId('profile-minutes-preset-60'));
+    fireEvent.press(screen.getByTestId('profile-form-submit'));
+
+    expect(await screen.findByTestId('next-step-card', {}, TIMEOUT)).toBeOnTheScreen();
+    expect(fake.fakeDb.profile).toMatchObject({
+      display_name: 'Anatoliy',
+      experience_level: 'middle',
+      daily_minutes: 60,
+      learning_goal: null,
+    });
+  });
+});
+
+describe('tab navigation', () => {
+  it('reaches every tab when signed in', async () => {
+    fake.fakeDb.session = testSession;
+    fake.fakeDb.profile = { ...completeProfile };
+    const router = renderRouter('./app', { initialUrl: '/' });
+    expect(await screen.findByTestId('next-step-card', {}, TIMEOUT)).toBeOnTheScreen();
 
     const tabs = [
       ['Learn', 'learn-screen', '/learn'],
@@ -25,10 +106,10 @@ describe('app navigation', () => {
       expect(await screen.findByTestId(screenId)).toBeOnTheScreen();
       expect(router.getPathname()).toBe(pathname);
     }
-  }, 15000);
+  }, 20000);
 
   it('shows the not-found screen for unknown routes', async () => {
     renderRouter('./app', { initialUrl: '/does-not-exist' });
-    expect(await screen.findByTestId('not-found-screen')).toBeOnTheScreen();
+    expect(await screen.findByTestId('not-found-screen', {}, TIMEOUT)).toBeOnTheScreen();
   });
 });

@@ -27,3 +27,17 @@ if (!i18n.isInitialized) {
 }
 
 export default i18n;
+
+export type TranslationKey = import('i18next').ParseKeys;
+
+/** Switch the interface language only when its translations exist; otherwise keep English. */
+export function applyUiLanguage(language: string): void {
+  const target = language in resources ? language : 'en';
+  if (i18n.language !== target) void i18n.changeLanguage(target);
+}
+
+/** Interface language for a new account: the device language when supported, else English. */
+export function deviceUiLanguage(): 'ru' | 'en' | 'de' {
+  const code = getLocales()[0]?.languageCode;
+  return code === 'ru' || code === 'de' ? code : 'en';
+}

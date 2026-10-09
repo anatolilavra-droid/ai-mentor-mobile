@@ -7,6 +7,7 @@ import { Screen } from '@/components/layout/Screen';
 import { AsyncView, LoadingState } from '@/components/states';
 import { Button } from '@/components/ui';
 import { spacing } from '@/constants/tokens';
+import { useCurrentProfile } from '@/features/profile/useProfile';
 import { useAsyncResource } from '@/hooks/useAsyncResource';
 
 import { ConceptPreview } from './components/ConceptPreview';
@@ -24,6 +25,7 @@ type HomeScreenProps = {
 
 export function HomeScreen({ loadSummary = getHomeSummary }: HomeScreenProps) {
   const { t } = useTranslation();
+  const profile = useCurrentProfile();
   const { state, retry } = useAsyncResource(loadSummary);
 
   return (
@@ -50,7 +52,7 @@ export function HomeScreen({ loadSummary = getHomeSummary }: HomeScreenProps) {
         {(summary) => (
           <View style={{ gap: spacing.xl }}>
             <View>
-              <HomeHero firstName={summary.firstName} />
+              <HomeHero firstName={profile.display_name ?? ''} />
               <NextStepCard step={summary.nextStep} />
             </View>
             <QuickActions />

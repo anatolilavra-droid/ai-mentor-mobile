@@ -8,6 +8,21 @@
     "error": {
       "title": "Something went off track",
       "message": "This screen could not load. Your data is safe — try again in a moment."
+    },
+    "continue": "Continue",
+    "save": "Save",
+    "cancel": "Cancel",
+    "optional": "Optional",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "config": {
+      "title": "Configuration missing",
+      "message": "This build has no Supabase settings, so sign-in is unavailable. Add the values from .env.example and rebuild.",
+      "missing": "Missing: {{names}}"
+    },
+    "profileError": {
+      "title": "Your profile could not load",
+      "message": "Check your connection and try again."
     }
   },
   "tabs": {
@@ -106,7 +121,6 @@
   },
   "profile": {
     "eyebrow": "Profile",
-    "level": "Junior",
     "planFree": "Free",
     "preferences": "Preferences",
     "language": "Language",
@@ -120,11 +134,139 @@
     "version": "Version",
     "plan": "Plan",
     "saved": "Preferences saved",
-    "primaryAction": "Edit profile"
+    "primaryAction": "Edit profile",
+    "learning": "Learning",
+    "goal": "Goal",
+    "goalEmpty": "No goal set yet",
+    "dailyMinutesValue": "{{count}} min per day",
+    "account": "Account",
+    "email": "Email"
   },
   "notFound": {
     "eyebrow": "404",
     "title": "Lost in the codebase.",
     "description": "This screen does not exist. Let's get you back to familiar ground."
+  },
+  "auth": {
+    "eyebrow": "Account",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat password",
+    "passwordHint": "At least 8 characters, with a letter and a number.",
+    "signIn": {
+      "title": "Welcome back.",
+      "subtitle": "Sign in to continue your learning path.",
+      "submit": "Sign in",
+      "forgot": "Forgot password?",
+      "noAccount": "New here? Create an account"
+    },
+    "signUp": {
+      "title": "Start learning.",
+      "subtitle": "Create an account to keep your plan, projects and progress.",
+      "submit": "Create account",
+      "haveAccount": "Already have an account? Sign in",
+      "checkEmailTitle": "Check your email",
+      "checkEmailMessage": "We sent a confirmation link to {{email}}. Open it, then sign in."
+    },
+    "forgot": {
+      "title": "Reset your password.",
+      "subtitle": "Enter your account email. We will send a 6-digit code.",
+      "submit": "Send code",
+      "back": "Back to sign in",
+      "sent": "If an account exists for {{email}}, a code is on its way."
+    },
+    "reset": {
+      "title": "Choose a new password.",
+      "subtitle": "Enter the code from the email sent to {{email}}.",
+      "code": "Code from email",
+      "submit": "Save new password",
+      "resend": "Send a new code",
+      "success": "Password updated. You are signed in."
+    },
+    "signOut": {
+      "action": "Sign out",
+      "confirmTitle": "Sign out?",
+      "confirmMessage": "You can sign back in with your email and password.",
+      "done": "Signed out"
+    },
+    "validation": {
+      "emailRequired": "Enter your email.",
+      "emailInvalid": "Enter a valid email, like name@example.com.",
+      "passwordRequired": "Enter your password.",
+      "passwordTooShort": "Use at least 8 characters.",
+      "passwordTooLong": "Use at most 72 characters.",
+      "passwordWeak": "Include at least one letter and one number.",
+      "passwordMismatch": "Passwords do not match.",
+      "codeInvalid": "Enter the code from the email (6 to 10 digits)."
+    },
+    "errors": {
+      "invalidCredentials": "Email or password is incorrect.",
+      "emailNotConfirmed": "Confirm your email first. Check your inbox for the link.",
+      "emailTaken": "An account with this email already exists. Sign in instead.",
+      "weakPassword": "This password is too easy to guess. Choose a stronger one.",
+      "samePassword": "Choose a password different from your current one.",
+      "emailInvalid": "This email address cannot be used.",
+      "codeInvalid": "The code is wrong or has expired. Request a new one.",
+      "emailRateLimit": "Too many emails were sent. Wait a few minutes and try again.",
+      "tooManyRequests": "Too many attempts. Wait a minute and try again.",
+      "signupDisabled": "New sign-ups are currently closed.",
+      "network": "No connection to the server. Check your internet and try again.",
+      "unknown": "Something went wrong. Try again."
+    }
+  },
+  "profileForm": {
+    "displayName": "Display name",
+    "displayNamePlaceholder": "How should your mentor call you?",
+    "experienceLevel": "Experience level",
+    "levels": {
+      "beginner": "Beginner",
+      "junior": "Junior",
+      "middle": "Middle",
+      "advanced": "Advanced"
+    },
+    "levelHints": {
+      "beginner": "Just starting out",
+      "junior": "First projects or first job",
+      "middle": "Confident, growing deeper",
+      "advanced": "Experienced, sharpening skills"
+    },
+    "dailyMinutes": "Minutes per day",
+    "dailyMinutesHint": "From 5 to 480 minutes.",
+    "minutesOption": "{{count}} min",
+    "learningGoal": "Learning goal",
+    "learningGoalPlaceholder": "For example: build my first React app and get a junior job",
+    "uiLanguage": "Interface language",
+    "languages": {
+      "en": "English",
+      "ru": "Русский",
+      "de": "Deutsch"
+    },
+    "languageHint": "Russian and German translations are coming. The interface stays in English until then.",
+    "validation": {
+      "nameTooShort": "Use at least 2 characters.",
+      "nameTooLong": "Use at most 50 characters.",
+      "nameInvalid": "Start with a letter; use letters, numbers, spaces, . - ' or _.",
+      "levelRequired": "Choose your experience level.",
+      "minutesRequired": "Enter how many minutes you can study per day.",
+      "minutesInteger": "Enter a whole number of minutes.",
+      "minutesRange": "Choose between 5 and 480 minutes.",
+      "goalTooShort": "Describe your goal in at least 10 characters, or leave it empty.",
+      "goalTooLong": "Keep your goal under 280 characters.",
+      "languageRequired": "Choose a language."
+    }
+  },
+  "onboarding": {
+    "eyebrow": "Profile setup",
+    "title": "Tell your mentor about you.",
+    "subtitle": "Explanations and plans will adapt to your level and your time.",
+    "submit": "Save and continue"
+  },
+  "profileEdit": {
+    "eyebrow": "Profile",
+    "title": "Edit profile.",
+    "submit": "Save changes",
+    "saved": "Profile saved"
   }
 }

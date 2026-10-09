@@ -593,48 +593,57 @@ Only run commit or push after Anatoliy explicitly writes:
 
 ## Current development phase
 
-Phase 1: Mobile Foundation.
+Phase 1: Mobile Foundation — completed.
+
+Phase 2: Authentication and User Profile — current.
 
 Implement only:
-- Expo mobile application;
-- TypeScript;
-- Expo Router;
-- bottom tab navigation;
-- Home screen;
-- Chat placeholder;
-- Learn placeholder;
-- Projects placeholder;
-- Profile screen;
-- shared design tokens;
-- premium visual foundation;
-- loading states;
-- empty states;
-- error states;
-- safe-area handling;
-- accessibility-friendly touch targets.
+- Supabase Auth with email and password;
+- sign up, sign in, sign out;
+- forgot password and password reset;
+- secure session persistence and restoration on Android;
+- protected routes;
+- the profiles table with Row Level Security;
+- profile setup and profile editing;
+- Zod validation for auth and profile forms;
+- loading, error and success states for every auth and profile flow;
+- an Android preview APK built by GitHub Actions (manual trigger, not published).
+
+Profile fields:
+- display_name;
+- experience_level: beginner, junior, middle, advanced;
+- learning_goal;
+- daily_minutes: integer from 5 to 480;
+- ui_language: ru, en, de;
+- created_at;
+- updated_at.
 
 Do not implement yet:
 - AI API;
-- Supabase;
-- real authentication;
 - payments;
+- technologies and user_technologies;
 - GitHub integration;
 - push notifications;
-- advanced backend;
+- Express backend;
+- Google Play publishing;
 - production deployment.
 
-## Definition of done for Phase 1
+## Definition of done for Phase 2
 
-Phase 1 is complete only when:
-- the app starts successfully;
-- all five tabs work;
-- navigation works on a physical Android device;
-- design tokens are centralized;
-- the visual style follows the premium direction;
-- loading and empty states exist;
-- no secrets are committed;
+Phase 2 is complete only when:
+- a new user can sign up, sign in and sign out;
+- a user can request a password reset and set a new password;
+- the session survives an app restart on a physical Android device;
+- signed-out users cannot reach protected screens;
+- a new user completes profile setup before reaching the tabs;
+- a user can edit their profile and see the change immediately;
+- profiles has Row Level Security and the RLS test script passes;
+- Zod validation shows clear, field-level messages;
+- no secrets, service keys or .env files are committed;
+- the preview APK builds in GitHub Actions and installs on Android;
 - TypeScript checks pass;
 - lint passes;
+- tests pass;
 - the diff is reviewed;
 - Anatoliy approves the result.
 

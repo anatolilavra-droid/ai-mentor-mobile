@@ -19,7 +19,6 @@ export type ConceptPreview = {
 };
 
 export type HomeSummary = {
-  firstName: string;
   nextStep: NextStep;
   concept: ConceptPreview;
   savedAnswers: SavedAnswer[];

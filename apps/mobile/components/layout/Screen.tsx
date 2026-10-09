@@ -57,9 +57,10 @@ export function Screen({
 
   return (
     <View testID={testID} style={styles.root}>
+      {/* Edge-to-edge Android no longer resizes the window for the keyboard, so pad on both platforms. */}
       <KeyboardAvoidingView
         style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'web' ? undefined : 'padding'}
       >
         {scroll ? (
           <ScrollView

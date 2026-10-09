@@ -4,15 +4,13 @@ import { StyleSheet, View } from 'react-native';
 import { Inline, Tag, Text } from '@/components/ui';
 import { borderWidths, colors, radii, shadows, spacing } from '@/constants/tokens';
 
-type ProfileHeaderProps = {
-  name: string;
-  stack: readonly string[];
-};
+import type { Profile } from '../profile.schemas';
 
 const AVATAR_SIZE = spacing.huge;
 
-export function ProfileHeader({ name, stack }: ProfileHeaderProps) {
+export function ProfileHeader({ profile, email }: { profile: Profile; email: string | undefined }) {
   const { t } = useTranslation();
+  const name = profile.display_name ?? '';
   const initial = name.charAt(0).toUpperCase();
 
   return (
@@ -23,14 +21,21 @@ export function ProfileHeader({ name, stack }: ProfileHeaderProps) {
         </Text>
       </View>
       <View style={styles.texts}>
-        <Text variant="display" accessibilityRole="header">
+        <Text variant="display" accessibilityRole="header" testID="profile-name">
           {name}
         </Text>
+        {email ? (
+          <Text variant="callout" color="secondary" numberOfLines={1}>
+            {email}
+          </Text>
+        ) : null}
         <Inline gap="xs" wrap>
-          <Tag label={t('profile.level')} tone="accent" />
-          {stack.map((item) => (
-            <Tag key={item} label={item} />
-          ))}
+          {profile.experience_level ? (
+            <Tag label={t(`profileForm.levels.${profile.experience_level}`)} tone="accent" />
+          ) : null}
+          {profile.daily_minutes ? (
+            <Tag label={t('profile.dailyMinutesValue', { count: profile.daily_minutes })} />
+          ) : null}
         </Inline>
       </View>
     </View>
