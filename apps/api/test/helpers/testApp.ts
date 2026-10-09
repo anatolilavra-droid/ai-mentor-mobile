@@ -1,0 +1,38 @@
+import { createApp, type AppConfig, type AppDeps } from '../../src/app.js';
+import { createJwksVerifier } from '../../src/auth/jwksVerifier.js';
+import { createLogger } from '../../src/lib/logger.js';
+import { createMockProvider } from '../../src/services/ai/providers/mock.provider.js';
+import { noopUsageGuard } from '../../src/services/usage/noopUsageGuard.js';
+
+import { captureLogs } from './captureLogs.js';
+import { createFakeSupabase } from './fakeSupabase.js';
+import { jwksFetch, TEST_SUPABASE_URL } from './keys.js';
+
+export const testConfig: AppConfig = {
+  version: '0.0.0-test',
+  aiTimeoutMs: 2_000,
+  requestTimeoutMs: 3_000,
+  jsonBodyLimit: '64kb',
+  rateLimitIp: { max: 1_000, windowMs: 60_000 },
+  rateLimitAi: { max: 1_000, windowMs: 60_000 },
+  trustProxy: 0,
+};
+
+type Overrides = Partial<Omit<AppDeps, 'config' | 'logger'>> & { config?: Partial<AppConfig> };
+
+/** The real app with in-memory dependencies: local JWKS, fake Supabase, mock AI. */
+export function buildTestApp(overrides: Overrides = {}) {
+  const logs = captureLogs();
+  const supabase = createFakeSupabase();
+  const app = createApp({
+    config: { ...testConfig, ...overrides.config },
+    logger: createLogger({ level: 'debug', destination: logs.destination }),
+    tokenVerifier:
+      overrides.tokenVerifier ??
+      createJwksVerifier({ supabaseUrl: TEST_SUPABASE_URL, fetchImpl: jwksFetch }),
+    createUserClient: overrides.createUserClient ?? supabase.factory,
+    aiProvider: overrides.aiProvider ?? createMockProvider(),
+    usageGuard: overrides.usageGuard ?? noopUsageGuard,
+  });
+  return { app, logs, supabase };
+}

@@ -4,12 +4,12 @@ A premium, dark-first mobile AI mentor for beginner and junior developers:
 learn programming, understand errors, review code, follow a personal
 learning plan, and keep projects and useful answers in one place.
 
-> **Status:** Phase 3 — Onboarding and Personalization completed. Email and
-> password accounts (Supabase Auth), secure session storage, protected routes,
-> a guided onboarding flow with a local draft, a technologies catalog and
-> "Personalize your mentor". The interface is available in English, Russian
-> and German.
-> AI and payments are intentionally not implemented yet.
+> **Status:** Phase 4 — AI Backend Foundation. Email and password accounts
+> (Supabase Auth), secure session storage, protected routes, a guided
+> onboarding flow, a technologies catalog and "Personalize your mentor". The
+> interface is available in English, Russian and German. The backend
+> (`apps/api`) verifies Supabase sessions and runs the AI pipeline with a mock
+> provider; a real AI provider, hosting and payments are not connected yet.
 
 ## Tech stack
 
@@ -20,7 +20,8 @@ learning plan, and keep projects and useful answers in one place.
 - Supabase Auth + PostgreSQL with Row Level Security
 - TanStack Query (server state), Zustand (local UI state only)
 - React Hook Form + Zod (forms and validation)
-- Jest + React Native Testing Library
+- Jest + React Native Testing Library (mobile)
+- Backend: Node.js + Express 5 + TypeScript (strict), Zod, pino, Vitest + Supertest
 
 ## Repository structure
 
@@ -36,6 +37,7 @@ apps/
     stores/       Zustand stores (local UI state)
     types/        shared types
     __tests__/    unit and screen tests
+  api/            backend: auth, AI pipeline, versioned prompts (see apps/api/README.md)
 ```
 
 ## Requirements
@@ -92,11 +94,15 @@ The APK is a personal preview signed with a debug key. It is never published to 
 
 ```bash
 pnpm typecheck      # TypeScript
-pnpm lint           # ESLint (expo lint)
-pnpm test           # Jest
+pnpm lint           # ESLint
+pnpm test           # Jest (mobile) + Vitest (api)
 pnpm format:check   # Prettier
 pnpm check          # all of the above
 ```
+
+The **API checks** workflow runs the backend checks on GitHub for every push
+that touches `apps/api`. To run the backend locally, see
+[`apps/api/README.md`](apps/api/README.md).
 
 ## Design system
 

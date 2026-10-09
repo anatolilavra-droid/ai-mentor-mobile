@@ -1,0 +1,69 @@
+# Checks the AI backend (apps/api) on every push and pull request that touches it.
+# No secrets or variables are needed: tests use a mock AI provider, a local JWKS
+# and a fake Supabase client. Nothing is deployed.
+
+name: API checks
+
+on:
+  push:
+    paths:
+      - 'apps/api/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig.base.json'
+      - '.github/workflows/api-ci.yml'
+  pull_request:
+    paths:
+      - 'apps/api/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig.base.json'
+      - '.github/workflows/api-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Format, typecheck, lint, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # No NODE_ENV=production here: the API refuses the mock provider in production.
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm --filter @ai-mentor/api typecheck
+
+      - name: Lint
+        run: pnpm --filter @ai-mentor/api lint
+
+      - name: Test
+        run: pnpm --filter @ai-mentor/api test
+
+      - name: Build
+        run: pnpm --filter @ai-mentor/api build

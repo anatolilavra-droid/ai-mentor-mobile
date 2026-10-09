@@ -358,10 +358,14 @@ Forms:
 - Zod resolver.
 
 Testing:
-- Jest;
-- React Native Testing Library;
-- integration tests;
+- Jest — mobile;
+- React Native Testing Library — mobile;
+- Vitest — API;
+- Supertest — API integration tests, if HTTP-level testing is needed;
 - E2E tests later.
+
+TypeScript strict everywhere. All checks run through the workspace scripts
+(pnpm format:check, lint, typecheck, test).
 
 ## Architecture rules
 
@@ -614,6 +618,27 @@ de.json must keep exactly the same keys and placeholders
 (__tests__/i18n.test.ts checks this). The saved ui_language is applied
 after saving; signed-out screens follow the device language.
 
+Phase 4: AI Backend Foundation — implemented, waiting for Anatoliy's review.
+apps/api: Express 5 + TypeScript strict. GET /health, GET /api/me and
+POST /api/ai/chat with a mock AI provider. Verified by Vitest + Supertest in
+the "API checks" GitHub workflow; not deployed.
+
+Phase 4 rules (keep them):
+- Supabase access tokens are verified locally with the project's public
+  JWKS (the project uses an ECC P-256 signing key): ES256 only, issuer
+  <SUPABASE_URL>/auth/v1, audience and role "authenticated". Never add the
+  JWT secret to the backend.
+- User data is read with a per-request Supabase client built from the
+  publishable key and the user's own token, so RLS applies. The service role
+  key is not used. Endpoints never take a user id from the client.
+- Phase 4 uses only the mock AI provider: no real AI keys, no external AI
+  API, no hosting choice. The API refuses AI_PROVIDER=mock in production.
+- Prompts are versioned in apps/api/src/prompts/<feature>/v<N>.ts; a
+  published version is never edited.
+- The usage check is a placeholder (noopUsageGuard) until subscriptions and
+  usage_counters exist.
+- apps/api/DEPLOYMENT.md lists what Phase 5 must decide and provide.
+
 Next phase: not defined yet — wait for Anatoliy's instructions.
 
 Phase 3 scope (for reference):
@@ -640,7 +665,8 @@ Rules:
 - custom_goal_details: optional, 0 to 500 characters, stored separately;
 - daily_minutes: 5 to 480, quick picks 15, 30, 45 and 60;
 - technologies: 1 to 8, no duplicates;
-- ui_language is saved; the interface stays English only (no ru/de translations).
+- ui_language is saved; in Phase 3 the interface stayed English only
+  (ru/de translations were added after Phase 3).
 
 Do not implement in Phase 3:
 - AI API;

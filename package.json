@@ -7,6 +7,7 @@
   },
   "scripts": {
     "mobile": "pnpm --filter @ai-mentor/mobile start",
+    "api": "pnpm --filter @ai-mentor/api dev",
     "lint": "pnpm -r --if-present lint",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
