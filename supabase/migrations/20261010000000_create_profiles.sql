@@ -1,6 +1,8 @@
--- Phase 2: user profiles.
--- One profile per auth user, created automatically on sign up.
--- Users can read and edit only their own profile (Row Level Security).
+/*
+  Phase 2: user profiles.
+  One profile per auth user, created automatically on sign up.
+  Users can read and edit only their own profile (Row Level Security).
+*/
 
 create table public.profiles (
   id               uuid primary key references auth.users (id) on delete cascade,
@@ -22,8 +24,10 @@ create table public.profiles (
 comment on table public.profiles is
   'Learner profile. display_name, experience_level and daily_minutes are filled during profile setup.';
 
--- Create a profile for every new auth user.
--- ui_language comes from sign-up metadata when it is one of the supported values.
+/*
+  Create a profile for every new auth user.
+  ui_language comes from sign-up metadata when it is one of the supported values.
+*/
 create function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -50,7 +54,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- updated_at is always set by the database, never by the client.
+/* updated_at is always set by the database, never by the client. */
 create function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -66,7 +70,7 @@ create trigger profiles_set_updated_at
   before update on public.profiles
   for each row execute function public.set_updated_at();
 
--- Row Level Security
+/* Row Level Security */
 alter table public.profiles enable row level security;
 
 create policy "profiles: read own"
@@ -82,10 +86,12 @@ create policy "profiles: update own"
   using ((select auth.uid()) = id)
   with check ((select auth.uid()) = id);
 
--- No insert policy: rows are created only by the trigger.
--- No delete policy: rows are removed by the cascade from auth.users.
+/*
+  No insert policy: rows are created only by the trigger.
+  No delete policy: rows are removed by the cascade from auth.users.
+*/
 
--- Column privileges: clients may change only the editable profile fields.
+/* Column privileges: clients may change only the editable profile fields. */
 revoke all on public.profiles from anon;
 revoke insert, update, delete on public.profiles from authenticated;
 grant select on public.profiles to authenticated;

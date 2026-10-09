@@ -1,7 +1,9 @@
--- RLS check for public.profiles.
--- Run the whole file in the Supabase SQL Editor after applying the migrations.
--- It creates two temporary users inside a transaction and rolls everything back.
--- Success: the editor shows "RLS profiles: all checks passed" and no error.
+/*
+  RLS check for public.profiles.
+  Run the whole file in the Supabase SQL Editor after applying the migrations.
+  It creates two temporary users inside a transaction and rolls everything back.
+  Success: the editor shows "RLS profiles: all checks passed" and no error.
+*/
 
 begin;
 
@@ -10,7 +12,7 @@ values
   ('00000000-0000-4000-8000-00000000000a', 'rls-user-a@example.test'),
   ('00000000-0000-4000-8000-00000000000b', 'rls-user-b@example.test');
 
--- The sign-up trigger must have created both profiles.
+/* The sign-up trigger must have created both profiles. */
 do $$
 begin
   if (select count(*) from public.profiles
@@ -20,7 +22,7 @@ begin
   end if;
 end $$;
 
--- Act as user A.
+/* Act as user A. */
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-4000-8000-00000000000a", "role": "authenticated"}';
 
@@ -50,21 +52,21 @@ begin
     where id = '00000000-0000-4000-8000-00000000000a';
     raise exception 'FAIL: user A changed the profile id';
   exception when insufficient_privilege then
-    null; -- expected: id is not an editable column
+    null; /* expected: id is not an editable column */
   end;
 
   begin
     insert into public.profiles (id) values ('00000000-0000-4000-8000-00000000000c');
     raise exception 'FAIL: user A inserted a profile';
   exception when insufficient_privilege then
-    null; -- expected
+    null; /* expected */
   end;
 
   begin
     delete from public.profiles where id = '00000000-0000-4000-8000-00000000000a';
     raise exception 'FAIL: user A deleted a profile';
   exception when insufficient_privilege then
-    null; -- expected
+    null; /* expected */
   end;
 
   begin
@@ -72,11 +74,11 @@ begin
     where id = '00000000-0000-4000-8000-00000000000a';
     raise exception 'FAIL: daily_minutes above 480 was accepted';
   exception when check_violation then
-    null; -- expected
+    null; /* expected */
   end;
 end $$;
 
--- Act as an anonymous visitor.
+/* Act as an anonymous visitor. */
 reset role;
 set local role anon;
 
@@ -86,7 +88,7 @@ begin
     perform 1 from public.profiles;
     raise exception 'FAIL: anon can read profiles';
   exception when insufficient_privilege then
-    null; -- expected
+    null; /* expected */
   end;
 end $$;
 

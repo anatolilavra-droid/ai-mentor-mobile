@@ -595,9 +595,17 @@ Only run commit or push after Anatoliy explicitly writes:
 
 Phase 1: Mobile Foundation — completed.
 
-Phase 2: Authentication and User Profile — current.
+Phase 2: Authentication and User Profile — completed (approved by Anatoliy).
+Verified on a physical Android device: sign up, sign in, sign out, session
+restoration after restart, profile setup and profile editing.
+Still to verify on a device: the password reset flow and the full
+supabase/tests/rls_profiles.sql run.
 
-Implement only:
+Phase 3: not defined yet. Wait for Anatoliy's Phase 3 scope before
+implementing new features. Until then, only fixes and maintenance of the
+Phase 1 and Phase 2 scope are allowed.
+
+Phase 2 scope (for reference):
 - Supabase Auth with email and password;
 - sign up, sign in, sign out;
 - forgot password and password reset;
