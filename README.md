@@ -4,9 +4,11 @@ A premium, dark-first mobile AI mentor for beginner and junior developers:
 learn programming, understand errors, review code, follow a personal
 learning plan, and keep projects and useful answers in one place.
 
-> **Status:** Phase 2 — Authentication and User Profile. Email and password
-> accounts (Supabase Auth), secure session storage, protected routes and an
-> editable learner profile. AI and payments are intentionally not implemented yet.
+> **Status:** Phase 3 — Onboarding and Personalization completed. Email and
+> password accounts (Supabase Auth), secure session storage, protected routes,
+> a guided onboarding flow with a local draft, a technologies catalog and
+> "Personalize your mentor". The interface is English only for now.
+> AI and payments are intentionally not implemented yet.
 
 ## Tech stack
 

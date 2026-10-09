@@ -601,7 +601,18 @@ restoration after restart, profile setup and profile editing.
 Still to verify on a device: the password reset flow and the full
 supabase/tests/rls_profiles.sql run.
 
-Phase 3: Onboarding and Personalization — current.
+Phase 3: Onboarding and Personalization — completed (approved by Anatoliy).
+Verified on a physical Android device: the full onboarding flow, step
+validation, draft restore after closing the app, editing from the summary,
+saving to profiles and user_technologies, skip and "Finish setup",
+"Personalize your mentor" and the three-field Edit profile.
+supabase/tests/rls_onboarding.sql passes.
+Known limitation: ui_language is saved, but the interface stays English
+until ru/de translations are added.
+
+Next phase: not defined yet — wait for Anatoliy's instructions.
+
+Phase 3 scope (for reference):
 
 Goal: collect onboarding answers for future AI mentor personalization.
 
