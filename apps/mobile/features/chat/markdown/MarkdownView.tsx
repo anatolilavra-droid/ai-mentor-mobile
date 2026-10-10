@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Linking, Text as NativeText, StyleSheet, View } from 'react-native';
 
 import { CodeBlock, Divider, Text } from '@/components/ui';
-import { colors, fontFamilies, radii, spacing } from '@/constants/tokens';
+import { codeFontVariant, colors, fontFamilies, radii, spacing } from '@/constants/tokens';
 
 import { isSafeUrl, parseMarkdown, type Block, type Inline } from './parseMarkdown';
 
@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
   },
   inlineCode: {
     fontFamily: fontFamilies.monoRegular,
+    fontVariant: codeFontVariant,
     backgroundColor: colors.background.secondary,
     borderRadius: radii.sm,
     color: colors.text.secondary,

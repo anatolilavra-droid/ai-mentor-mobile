@@ -67,6 +67,12 @@ function toProviderError(error: unknown, signal: AbortSignal): unknown {
   if (error instanceof ApiError) {
     if (error.status === 429)
       return new AIProviderError('rate_limited', 'Gemini rate limit', { cause: error });
+    // "The model is overloaded": temporary, the user can try again in a minute.
+    if (error.status === 503 || /\bUNAVAILABLE\b/.test(error.message)) {
+      return new AIProviderError('overloaded', `Gemini overloaded (${error.status})`, {
+        cause: error,
+      });
+    }
     if (error.status === 408 || error.status === 504) {
       return new AIProviderError('timeout', 'Gemini timeout', { cause: error });
     }

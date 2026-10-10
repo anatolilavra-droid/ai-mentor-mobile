@@ -111,7 +111,7 @@ Request:
   Each failed rule becomes a `details` item `{ "path": "code", "message": "tooManyLines" }`
   with a stable key: `empty`, `tooManyChars`, `tooManyLines`, `invalidCharacters`.
 
-Response (prompt `code-review/v2`, validated with Zod, then normalized by
+Response (prompt `code-review/v3`, validated with Zod, then normalized by
 `finalizeReview()`: issues ordered error → warning → info, line numbers
 outside the code dropped, only the parts the action uses kept):
 
@@ -136,7 +136,7 @@ outside the code dropped, only the parts the action uses kept):
     "confidence": "high"
   },
   "provider": "gemini",
-  "promptVersion": "code-review/v2",
+  "promptVersion": "code-review/v3",
   "requestId": "…",
   "input": { "language": "javascript", "action": "fix", "chars": 34, "lines": 3 },
   "usage": {
@@ -196,6 +196,7 @@ the `X-Request-Id` header):
 | `INTERNAL_ERROR`         | 500  |
 | `AI_PROVIDER_ERROR`      | 502  |
 | `AI_INVALID_RESPONSE`    | 502  |
+| `AI_PROVIDER_BUSY`       | 503  |
 | `SERVICE_UNAVAILABLE`    | 503  |
 | `TIMEOUT`                | 504  |
 
@@ -252,9 +253,15 @@ helmet → request id + log → abort signal → request timeout → per-IP limi
   edited: changes go into a new version and `src/prompts/registry.ts` points to
   it. User text is passed as delimited data, never inside the system prompt.
   Chat uses `chat/v2` (history + onboarding context); `chat/v1` stays unchanged.
-  Code review uses `code-review/v2` (four actions, categories, steps, changes,
-  confidence; the code is sent in `<learner_code language="…">` with any
-  closing tag inside it neutralized); `code-review/v1` stays unchanged.
+  Code review uses `code-review/v3`: `code-review/v2` (four actions, categories,
+  steps, changes, confidence; the code is sent in `<learner_code language="…">`
+  with any closing tag inside it neutralized) plus a layout rule for `fixedCode`
+  (the whole program with its line breaks and indentation). If multi-line code
+  still comes back fixed on one line, the API logs a warning with line counts
+  only. `code-review/v1` and `code-review/v2` stay unchanged.
+- **Busy provider**: Gemini 503 / `UNAVAILABLE` (overloaded) and 429 (rate
+  limited) become `AI_PROVIDER_BUSY` (503). There is no automatic retry and the
+  quota is not charged; the app shows "try again in a minute" with Retry.
 - **No code execution**: user code is data only. ESLint forbids `eval`,
   `new Function`, `vm`, `child_process` and `worker_threads`.
 

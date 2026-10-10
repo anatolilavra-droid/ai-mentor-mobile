@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react-native';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { borderWidths, colors, layout, radii, spacing } from '@/constants/tokens';
+import { borderWidths, colors, layout, opacity, radii, spacing } from '@/constants/tokens';
 
 import { Icon, type IconColor } from './Icon';
 import { PressableScale } from './PressableScale';
@@ -17,6 +17,11 @@ export type ButtonProps = {
   leadingIcon?: LucideIcon;
   trailingIcon?: LucideIcon;
   disabled?: boolean;
+  /**
+   * Called when a disabled (not loading) button is pressed, e.g. to point the
+   * user to what is missing. The button still looks and reads as disabled.
+   */
+  onPressWhenDisabled?: () => void;
   loading?: boolean;
   fullWidth?: boolean;
   accessibilityHint?: string;
@@ -49,6 +54,7 @@ export function Button({
   leadingIcon,
   trailingIcon,
   disabled = false,
+  onPressWhenDisabled,
   loading = false,
   fullWidth = false,
   accessibilityHint,
@@ -56,13 +62,16 @@ export function Button({
 }: ButtonProps) {
   const styles = variantStyles[variant];
   const isInactive = disabled || loading;
+  // A disabled button with onPressWhenDisabled stays pressable but keeps the disabled look and state.
+  const pressWhenDisabled = disabled && !loading && onPressWhenDisabled !== undefined;
 
   return (
     <PressableScale
       testID={testID}
-      onPress={onPress}
-      disabled={isInactive}
-      haptic
+      onPress={pressWhenDisabled ? onPressWhenDisabled : onPress}
+      // undefined (not false) so Pressable keeps accessibilityState.disabled below.
+      disabled={pressWhenDisabled ? undefined : isInactive}
+      haptic={!isInactive}
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isInactive, busy: loading }}
@@ -71,6 +80,7 @@ export function Button({
         { minHeight: size === 'lg' ? layout.minTouchTarget + spacing.xs : layout.minTouchTarget },
         styles.container,
         fullWidth && baseStyles.fullWidth,
+        pressWhenDisabled && baseStyles.disabled,
       ]}
     >
       {loading ? (
@@ -101,6 +111,9 @@ const baseStyles = StyleSheet.create({
   },
   fullWidth: {
     alignSelf: 'stretch',
+  },
+  disabled: {
+    opacity: opacity.disabled,
   },
   content: {
     flexDirection: 'row',

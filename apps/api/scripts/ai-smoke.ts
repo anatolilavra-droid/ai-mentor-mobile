@@ -18,7 +18,7 @@ import { z } from 'zod';
 
 import { prompts } from '../src/prompts/registry.js';
 import type { LearnerContext } from '../src/prompts/types.js';
-import { finalizeReview } from '../src/services/ai/finalizeReview.js';
+import { finalizeReview, isFixedCodeCollapsed } from '../src/services/ai/finalizeReview.js';
 import { generateTextResultSchema } from '../src/services/ai/providers/AIProvider.js';
 import { createGeminiProvider } from '../src/services/ai/providers/gemini.provider.js';
 
@@ -163,14 +163,19 @@ for (const action of CODE_REVIEW_ACTIONS) {
       action,
       lines: countCodeLines(request.code),
     });
-    out(`### Code review: ${action} (${prompt.ref}) ✅`);
+    // The sample has several lines, so fixed code must keep its line breaks.
+    const collapsed = isFixedCodeCollapsed(review, countCodeLines(request.code));
+    if (collapsed) failed = true;
+    const fixedLines = review.fixedCode ? countCodeLines(review.fixedCode.trim()) : 0;
+    out(`### Code review: ${action} (${prompt.ref}) ${collapsed ? '❌' : '✅'}`);
     out(
       `${Math.round(performance.now() - startedAt)} ms, ` +
         `${raw.usage.inputTokens} input / ${raw.usage.outputTokens} output tokens, ` +
         `${review.issues.length} issue(s), steps: ${review.steps?.length ?? 0}, ` +
-        `fixed code: ${review.fixedCode ? 'yes' : 'no'}, confidence: ${review.confidence}; ` +
-        'the answer matches the review schema.',
+        `fixed code: ${review.fixedCode ? `${fixedLines} line(s)` : 'no'}, ` +
+        `confidence: ${review.confidence}; the answer matches the review schema.`,
     );
+    if (collapsed) out('Fixed code came back on one line: it must keep the line breaks.');
     out();
     out('<details><summary>Answer</summary>');
     out();

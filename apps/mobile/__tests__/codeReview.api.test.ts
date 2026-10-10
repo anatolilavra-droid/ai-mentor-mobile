@@ -90,6 +90,7 @@ describe('code review error messages', () => {
     ['NETWORK', 'chat.errors.network'],
     ['RATE_LIMITED', 'chat.errors.rateLimited'],
     ['AI_PROVIDER_ERROR', 'chat.errors.unavailable'],
+    ['AI_PROVIDER_BUSY', 'codeReview.errors.busy'],
   ] as const)('%s → %s', (code, key) => {
     expect(codeReviewErrorKey(new ApiError(code))).toBe(key);
   });
@@ -104,6 +105,7 @@ describe('code review error messages', () => {
   it('offers Retry for temporary failures only', () => {
     expect(isRetryable(new ApiError('TIMEOUT'))).toBe(true);
     expect(isRetryable(new ApiError('AI_INVALID_RESPONSE'))).toBe(true);
+    expect(isRetryable(new ApiError('AI_PROVIDER_BUSY'))).toBe(true);
     expect(isRetryable(new ApiError('USAGE_LIMIT_REACHED'))).toBe(false);
     expect(isRetryable(new ApiError('VALIDATION_ERROR'))).toBe(false);
   });

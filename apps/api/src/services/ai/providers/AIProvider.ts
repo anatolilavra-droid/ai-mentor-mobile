@@ -56,8 +56,19 @@ export interface AIProvider {
   reviewCode(input: CodeReviewInput): Promise<CodeReviewResult>;
 }
 
+/**
+ * - rate_limited: the provider refused because of its request quota (HTTP 429).
+ * - overloaded: the provider is temporarily over capacity (e.g. Gemini 503 UNAVAILABLE).
+ * Both are temporary: the API reports AI_PROVIDER_BUSY and never retries by itself.
+ */
 export type AIProviderErrorKind =
-  'timeout' | 'rate_limited' | 'unavailable' | 'invalid_response' | 'refused' | 'unknown';
+  | 'timeout'
+  | 'rate_limited'
+  | 'overloaded'
+  | 'unavailable'
+  | 'invalid_response'
+  | 'refused'
+  | 'unknown';
 
 /** Providers translate their own failures into this error. */
 export class AIProviderError extends Error {

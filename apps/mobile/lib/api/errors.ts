@@ -61,6 +61,8 @@ export function apiErrorMessageKey(error: unknown): TranslationKey {
     case 'VALIDATION_ERROR':
     case 'PAYLOAD_TOO_LARGE':
       return 'chat.errors.invalid';
+    case 'AI_PROVIDER_BUSY':
+      return 'chat.errors.busy';
     case 'AI_PROVIDER_ERROR':
     case 'AI_INVALID_RESPONSE':
     case 'SERVICE_UNAVAILABLE':

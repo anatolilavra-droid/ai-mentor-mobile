@@ -11,17 +11,18 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { PlugZap, SearchCode } from 'lucide-react-native';
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type ScrollView, type TextInput } from 'react-native';
 
 import { InlineMessage } from '@/components/feedback/InlineMessage';
 import { Screen } from '@/components/layout/Screen';
 import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { EmptyState } from '@/components/states';
-import { Button, ChoiceGroup } from '@/components/ui';
+import { Button, ChoiceGroup, Text } from '@/components/ui';
 import { spacing } from '@/constants/tokens';
 import { LimitReachedCard } from '@/features/chat/components/LimitReachedCard';
 import { QuotaBadge } from '@/features/chat/components/QuotaBadge';
 import { ThinkingIndicator } from '@/features/chat/components/ThinkingIndicator';
+import { useMotionPreference } from '@/hooks/useMotionPreference';
 import { apiBaseUrl } from '@/lib/api/config';
 import { isApiError, isRetryable } from '@/lib/api/errors';
 
@@ -89,6 +90,27 @@ function ReviewForm() {
   const code = useCodeReviewStore((state) => state.code);
   const { setLanguage, setAction, setCode } = useCodeReviewStore.getState();
   const check = useMemo(() => checkCodeInput(code), [code]);
+  const { reduceMotion } = useMotionPreference();
+
+  // Pressing the disabled button scrolls to the code field and focuses it.
+  const scrollRef = useRef<ScrollView>(null);
+  const inputRef = useRef<TextInput>(null);
+  const formY = useRef(0);
+  const codeY = useRef(0);
+  const focusCode = () => {
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, formY.current + codeY.current - spacing.md),
+      animated: !reduceMotion,
+    });
+    inputRef.current?.focus();
+  };
+  const submitHint = check.valid
+    ? undefined
+    : t(
+        check.issues.includes('empty')
+          ? 'codeReview.submitHint.empty'
+          : 'codeReview.submitHint.invalid',
+      );
 
   const { submit, retry, cancel, isPending, error } = useCodeReview({
     onSuccess: () => router.push('/code-review/result'),
@@ -122,6 +144,7 @@ function ReviewForm() {
     <Screen
       withBottomInset
       testID="code-review-screen"
+      scrollRef={scrollRef}
       footer={
         isPending ? (
           <View style={styles.pending}>
@@ -135,19 +158,33 @@ function ReviewForm() {
             />
           </View>
         ) : (
-          <Button
-            label={t('codeReview.submit')}
-            leadingIcon={SearchCode}
-            fullWidth
-            disabled={!check.valid}
-            onPress={() => void send()}
-            testID="code-review-submit"
-          />
+          <View style={styles.submit}>
+            {submitHint ? (
+              <Text variant="caption" color="muted" align="center" testID="code-review-submit-hint">
+                {submitHint}
+              </Text>
+            ) : null}
+            <Button
+              label={t('codeReview.submit')}
+              leadingIcon={SearchCode}
+              fullWidth
+              disabled={!check.valid}
+              onPressWhenDisabled={focusCode}
+              accessibilityHint={submitHint}
+              onPress={() => void send()}
+              testID="code-review-submit"
+            />
+          </View>
         )
       }
     >
       <Header />
-      <View style={styles.form}>
+      <View
+        style={styles.form}
+        onLayout={(event) => {
+          formY.current = event.nativeEvent.layout.y;
+        }}
+      >
         <View style={styles.quota}>
           <QuotaBadge feature="code_review" />
         </View>
@@ -158,6 +195,19 @@ function ReviewForm() {
           onChange={setLanguage}
           testID="code-review-language"
         />
+        <View
+          onLayout={(event) => {
+            codeY.current = event.nativeEvent.layout.y;
+          }}
+        >
+          <CodeInput
+            ref={inputRef}
+            value={code}
+            onChangeText={setCode}
+            check={check}
+            editable={!isPending}
+          />
+        </View>
         <ChoiceGroup<CodeReviewAction>
           label={t('codeReview.actionLabel')}
           options={actionOptions}
@@ -166,7 +216,6 @@ function ReviewForm() {
           layout="list"
           testID="code-review-action"
         />
-        <CodeInput value={code} onChangeText={setCode} check={check} editable={!isPending} />
 
         {error && limitReached ? (
           <LimitReachedCard quota={error.quota} feature="code_review" testID="code-review-limit" />
@@ -193,7 +242,7 @@ function ReviewForm() {
   );
 }
 
-/** Code review input: language, action and code. Without a configured API it explains why. */
+/** Code review input: language, code and action. Without a configured API it explains why. */
 export function CodeReviewInputScreen() {
   return apiBaseUrl ? <ReviewForm /> : <NotConnected />;
 }
@@ -207,6 +256,9 @@ const styles = StyleSheet.create({
   },
   pending: {
     gap: spacing.sm,
+  },
+  submit: {
+    gap: spacing.xs,
   },
   error: {
     gap: spacing.xs,

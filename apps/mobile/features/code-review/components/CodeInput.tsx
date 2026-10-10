@@ -3,13 +3,14 @@ import {
   MAX_CODE_REVIEW_LINES,
   type CodeInputCheck,
 } from '@ai-mentor/shared';
-import { useState } from 'react';
+import { useState, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { Text } from '@/components/ui';
 import {
   borderWidths,
+  codeFontVariant,
   colors,
   fontFamilies,
   fontSizes,
@@ -27,13 +28,15 @@ type CodeInputProps = {
   /** checkCodeInput(value): the same check the API runs. */
   check: CodeInputCheck;
   editable?: boolean;
+  /** The text field, so the screen can focus it. */
+  ref?: Ref<TextInput>;
 };
 
 /**
  * Monospaced code field with live character and line counters. The input is
  * never cut: limits are shown and enforced by the send button and the API.
  */
-export function CodeInput({ value, onChangeText, check, editable = true }: CodeInputProps) {
+export function CodeInput({ value, onChangeText, check, editable = true, ref }: CodeInputProps) {
   const { t, i18n } = useTranslation();
   const [focused, setFocused] = useState(false);
   const format = (count: number) => count.toLocaleString(i18n.language);
@@ -66,6 +69,7 @@ export function CodeInput({ value, onChangeText, check, editable = true }: CodeI
       </Text>
       <View style={[styles.field, { borderColor }, !editable && styles.disabled]}>
         <TextInput
+          ref={ref}
           testID="code-review-input"
           value={value}
           onChangeText={onChangeText}
@@ -131,6 +135,7 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     color: colors.text.primary,
     fontFamily: fontFamilies.monoRegular,
+    fontVariant: codeFontVariant,
     fontSize: fontSizes.code,
     lineHeight: lineHeights.code,
   },

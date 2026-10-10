@@ -19,6 +19,9 @@ export function toAppError(
     switch (error.kind) {
       case 'timeout':
         return new AppError('TIMEOUT', { cause: error });
+      case 'rate_limited':
+      case 'overloaded':
+        return new AppError('AI_PROVIDER_BUSY', { cause: error });
       case 'invalid_response':
         return new AppError('AI_INVALID_RESPONSE', { cause: error });
       default:

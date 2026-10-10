@@ -154,6 +154,27 @@ describe('POST /api/ai/chat', () => {
     expect(JSON.stringify(res.body)).not.toContain('secret internal detail');
   });
 
+  it.each(['overloaded', 'rate_limited'] as const)(
+    'maps a provider "%s" failure to 503 AI_PROVIDER_BUSY without retrying',
+    async (kind) => {
+      let calls = 0;
+      const provider: AIProvider = {
+        ...createMockProvider(),
+        generateText: async () => {
+          calls += 1;
+          throw new AIProviderError(kind, 'Gemini: model is experiencing high demand');
+        },
+      };
+      const { app } = buildTestApp({ aiProvider: provider });
+      const res = await postChat(app, { message: 'Hi' });
+
+      expect(res.status).toBe(503);
+      expect(res.body.error.code).toBe('AI_PROVIDER_BUSY');
+      expect(JSON.stringify(res.body)).not.toContain('high demand');
+      expect(calls).toBe(1);
+    },
+  );
+
   it('returns 429 USAGE_LIMIT_REACHED when the usage guard says no', async () => {
     const denyAll: UsageGuard = {
       check: async () => ({

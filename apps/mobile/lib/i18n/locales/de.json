@@ -150,6 +150,7 @@
       "limitReached": "Du hast das Limit für diesen Monat erreicht.",
       "invalid": "Die Nachricht konnte nicht gesendet werden. Versuche eine kürzere Nachricht.",
       "unavailable": "Der Mentor ist gerade nicht erreichbar. Versuche es gleich noch einmal.",
+      "busy": "Der KI-Dienst ist gerade überlastet. Versuche es in einer Minute erneut.",
       "generic": "Etwas ist schiefgelaufen. Versuche es erneut."
     }
   },
@@ -198,6 +199,10 @@
       "invalidCharacters": "Der Code enthält Zeichen, die nicht gesendet werden können."
     },
     "submit": "Code prüfen",
+    "submitHint": {
+      "empty": "Füge deinen Code ein, um das Review zu starten.",
+      "invalid": "Behebe das Problem mit deinem Code oben, um das Review zu starten."
+    },
     "pending": "Der Mentor liest deinen Code…",
     "cancel": "Abbrechen",
     "secrets": {
@@ -218,7 +223,8 @@
     },
     "errors": {
       "timeout": "Das Review hat zu lange gedauert. Versuche es erneut oder kürze den Code.",
-      "invalidResponse": "Die Antwort des Mentors konnte nicht gelesen werden. Versuche es erneut."
+      "invalidResponse": "Die Antwort des Mentors konnte nicht gelesen werden. Versuche es erneut.",
+      "busy": "Der KI-Dienst ist gerade überlastet. Versuche es in einer Minute erneut."
     },
     "limit": {
       "title": "Deine Code-Reviews für diesen Monat sind aufgebraucht",

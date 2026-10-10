@@ -691,8 +691,12 @@ Not yet checked on a device: the limit screen and the wake-up after sleep.
   `sync: false`. The deployment is created and started by Anatoliy only.
   EXPO_PUBLIC_API_URL (public) points the app to the API.
 
-Phase 6: AI Code Review — implemented, waiting for Anatoliy's review and the
-on-device check.
+Phase 6: AI Code Review — deployed (commit 5776048, Render), the "AI smoke
+test" passed all four actions on gemini-3.7-flash and preview APK #8 is
+installed. On the phone the screen opens and the counters work; the first
+review failed with a typed "unavailable" error because Gemini answered 503
+UNAVAILABLE (overloaded): our handling was correct (Retry, quota not charged).
+The full Phase 6 on-device checklist is still open (after Phase 6.1).
 - Stack routes /code-review (input) and /code-review/result, opened from Home
   (quick actions "Explain my code" and "Fix an error", with ?action=) and from
   the chat header. No sixth tab. Back keeps the input; the flow's state lives
@@ -715,6 +719,33 @@ on-device check.
   asks "Cancel" / "Send anyway". The code is never changed automatically.
 - Results are plain text and a copyable CodeBlock: no Markdown, HTML or
   WebView, and code is never executed or rendered. Saving results comes later.
+
+Phase 6.1: Code review polish — implemented, waiting for Anatoliy's review,
+the deploy and the on-device check.
+- Input screen order: language → code → action. Above the disabled button a
+  hint says what is missing (codeReview.submitHint.empty / .invalid); pressing
+  the disabled button scrolls to the code field and focuses it
+  (Button.onPressWhenDisabled keeps the disabled look and accessibility state).
+- Code text has no programming ligatures: codeFontVariant
+  ['no-common-ligatures', 'no-contextual'] (JetBrains Mono keeps them in
+  `calt`) in CodeInput, the `code` text variant (CodeBlock) and inline code in
+  chat Markdown.
+- Prompt code-review/v3 (registry → v3; v1 and v2 unchanged): fixedCode is the
+  whole program with its line breaks and indentation, one statement per line,
+  line breaks written as \n in JSON. The API logs a warning (line counts only,
+  never code) when multi-line input comes back fixed on one line; the
+  "AI smoke test" fails an action whose fixedCode collapsed to one line.
+- New error code AI_PROVIDER_BUSY (shared ERROR_CODES, HTTP 503): Gemini 503 /
+  UNAVAILABLE → provider kind 'overloaded'; 'overloaded' and 'rate_limited' →
+  AI_PROVIDER_BUSY. No automatic retry, quota not charged. The app shows
+  chat.errors.busy / codeReview.errors.busy ("The AI service is overloaded
+  right now. Try again in a minute.") with Retry.
+- No migrations, no new dependencies. A fallback model (AI_FALLBACK_MODEL) is a
+  separate decision for later.
+- Rollout after Anatoliy's push: Render Manual Deploy → "API live check" →
+  "AI smoke test" (model exactly gemini-3.7-flash) → preview APK. Then the
+  Phase 6 on-device checklist and the open Phase 5b checks (limit screen,
+  wake-up after sleep).
 
 Next phase: not defined yet — wait for Anatoliy's instructions.
 

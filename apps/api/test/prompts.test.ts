@@ -17,7 +17,7 @@ const learner: LearnerContext = {
 describe('prompts', () => {
   it('registers the current version of each feature', () => {
     expect(prompts.chat.ref).toBe('chat/v2');
-    expect(prompts.codeReview.ref).toBe('code-review/v2');
+    expect(prompts.codeReview.ref).toBe('code-review/v3');
   });
 
   it('chat/v1 keeps the user message out of the system prompt', () => {

@@ -22,6 +22,8 @@ export function codeReviewErrorKey(error: unknown): TranslationKey {
       return 'codeReview.errors.timeout';
     case 'AI_INVALID_RESPONSE':
       return 'codeReview.errors.invalidResponse';
+    case 'AI_PROVIDER_BUSY':
+      return 'codeReview.errors.busy';
     case 'VALIDATION_ERROR': {
       const issue = error.details.find(
         (detail) => detail.path === 'code' && isInputIssue(detail.message),

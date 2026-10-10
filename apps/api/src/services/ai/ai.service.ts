@@ -18,7 +18,7 @@ import type { Quota, UsageFeature, UsageGuard } from '../usage/UsageGuard.js';
 
 import { toAppError } from './ai.errors.js';
 import { buildChatContext, estimateContextSize } from './chatContext.js';
-import { finalizeReview } from './finalizeReview.js';
+import { finalizeReview, isFixedCodeCollapsed } from './finalizeReview.js';
 import {
   codeReviewResultSchema,
   generateTextResultSchema,
@@ -265,9 +265,17 @@ export function createAIService(deps: AIServiceDeps): AIService {
       if (!review.success) throw new AppError('AI_INVALID_RESPONSE', { cause: review.error });
 
       logSuccess(call, provider, prompt.ref, result.data.model, result.data.usage, startedAt);
+      const finalReview = finalizeReview(review.data, input);
+      if (isFixedCodeCollapsed(finalReview, input.lines)) {
+        // Line counts only: the code itself is never logged.
+        call.log.warn(
+          { codeReview: { promptRef: prompt.ref, action: input.action, lines: input.lines } },
+          'fixed code returned on one line',
+        );
+      }
       const quotaAfter = await recordUsage(call, 'code_review', result.data.usage, quota);
       return {
-        review: finalizeReview(review.data, input),
+        review: finalReview,
         input,
         provider: provider.name,
         promptVersion: prompt.ref,

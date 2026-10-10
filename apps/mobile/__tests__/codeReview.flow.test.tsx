@@ -5,7 +5,7 @@ import {
 } from '@ai-mentor/shared';
 import * as Clipboard from 'expo-clipboard';
 import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
-import { Alert, type AlertButton } from 'react-native';
+import { Alert, TextInput, type AlertButton } from 'react-native';
 
 import { useCodeReviewStore } from '@/features/code-review/codeReview.store';
 import { apiClient } from '@/lib/api/client';
@@ -52,7 +52,7 @@ function response(overrides: Partial<CodeReviewResponse> = {}): CodeReviewRespon
       confidence: 'high',
     },
     provider: 'gemini',
-    promptVersion: 'code-review/v2',
+    promptVersion: 'code-review/v3',
     requestId: 'r',
     input: { language: 'javascript', action: 'fix', chars: CODE.length, lines: 3 },
     usage: { inputTokens: 1, outputTokens: 1, quota: { used: 4, limit: 10, period: 'month' } },
@@ -145,6 +145,55 @@ describe('code review flow', () => {
 
     fireEvent.press(screen.getByTestId('code-review-submit'));
     expect(api.codeReview).not.toHaveBeenCalled();
+  });
+
+  it('orders the form as language, code, action', async () => {
+    await openInput();
+    const ids = screen
+      .getAllByTestId(/^code-review-(language|input|action)$/)
+      .map((element) => element.props.testID as string);
+    expect(ids).toEqual(['code-review-language', 'code-review-input', 'code-review-action']);
+    // Code is shown glyph by glyph: no `<=` → ⩽ or `++` ligatures.
+    expect(screen.getByTestId('code-review-input')).toHaveStyle({
+      fontVariant: ['no-common-ligatures', 'no-contextual'],
+    });
+  });
+
+  it('explains the disabled button and points to the code field when pressed', async () => {
+    const focus = jest.mocked((TextInput.prototype as unknown as { focus: () => void }).focus);
+    await openInput();
+    expect(screen.getByTestId('code-review-submit-hint')).toHaveTextContent(
+      'Paste your code to start the review.',
+    );
+
+    fireEvent.press(screen.getByTestId('code-review-submit'));
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(api.codeReview).not.toHaveBeenCalled();
+
+    typeCode('a'.repeat(MAX_CODE_REVIEW_CHARS + 1));
+    expect(screen.getByTestId('code-review-submit-hint')).toHaveTextContent(
+      'Fix the problem with your code above to start the review.',
+    );
+
+    typeCode(CODE);
+    expect(screen.queryByTestId('code-review-submit-hint')).toBeNull();
+  });
+
+  it('says the AI service is busy and retries only when asked', async () => {
+    api.codeReview.mockRejectedValueOnce(new ApiError('AI_PROVIDER_BUSY', { status: 503 }));
+    api.codeReview.mockResolvedValueOnce(response());
+    await openInput();
+    typeCode(CODE);
+    fireEvent.press(screen.getByTestId('code-review-submit'));
+
+    expect(await screen.findByTestId('code-review-error')).toHaveTextContent(
+      'The AI service is overloaded right now. Try again in a minute.',
+    );
+    expect(api.codeReview).toHaveBeenCalledTimes(1);
+
+    fireEvent.press(screen.getByTestId('code-review-retry'));
+    expect(await screen.findByTestId('code-review-result-screen')).toBeOnTheScreen();
+    expect(api.codeReview).toHaveBeenCalledTimes(2);
   });
 
   it('sends, shows the result, copies the code and keeps the input on Back', async () => {

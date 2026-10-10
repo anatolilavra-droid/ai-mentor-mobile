@@ -16,6 +16,7 @@ export const ERROR_STATUS = {
   INTERNAL_ERROR: 500,
   AI_PROVIDER_ERROR: 502,
   AI_INVALID_RESPONSE: 502,
+  AI_PROVIDER_BUSY: 503,
   SERVICE_UNAVAILABLE: 503,
   TIMEOUT: 504,
 } as const satisfies Record<ErrorCode, number>;
@@ -34,6 +35,7 @@ export const DEFAULT_MESSAGES: Record<ErrorCode, string> = {
   INTERNAL_ERROR: 'Something went wrong. Please try again.',
   AI_PROVIDER_ERROR: 'The AI mentor is unavailable right now. Please try again.',
   AI_INVALID_RESPONSE: 'The AI mentor returned an unexpected answer. Please try again.',
+  AI_PROVIDER_BUSY: 'The AI service is overloaded right now. Please try again in a minute.',
   SERVICE_UNAVAILABLE: 'The service is temporarily unavailable. Please try again.',
   TIMEOUT: 'The request took too long. Please try again.',
 };

@@ -1,4 +1,4 @@
-import { colors, radii, spacing } from '@/constants/tokens';
+import { codeFontVariant, colors, radii, spacing, textVariants } from '@/constants/tokens';
 import { contrastRatio } from '@/lib/contrast';
 
 const WCAG_AA = 4.5;
@@ -40,6 +40,11 @@ describe('design tokens', () => {
         expect(value % 8).toBe(0);
       }
     }
+  });
+
+  it('code text turns off programming ligatures (liga and calt)', () => {
+    expect(codeFontVariant).toEqual(['no-common-ligatures', 'no-contextual']);
+    expect(textVariants.code.fontVariant).toBe(codeFontVariant);
   });
 
   it('radii are multiples of 8 (except full)', () => {

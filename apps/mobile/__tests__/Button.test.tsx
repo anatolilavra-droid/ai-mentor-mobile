@@ -20,4 +20,31 @@ describe('Button', () => {
     expect(onPress).not.toHaveBeenCalled();
     expect(button).toBeDisabled();
   });
+
+  it('calls onPressWhenDisabled instead of onPress and stays disabled', () => {
+    const onPress = jest.fn();
+    const onPressWhenDisabled = jest.fn();
+    renderWithProviders(
+      <Button
+        label="Review"
+        onPress={onPress}
+        onPressWhenDisabled={onPressWhenDisabled}
+        disabled
+      />,
+    );
+    const button = screen.getByRole('button', { name: 'Review' });
+    fireEvent.press(button);
+    expect(onPressWhenDisabled).toHaveBeenCalledTimes(1);
+    expect(onPress).not.toHaveBeenCalled();
+    expect(button).toBeDisabled();
+  });
+
+  it('never calls onPressWhenDisabled while loading', () => {
+    const onPressWhenDisabled = jest.fn();
+    renderWithProviders(
+      <Button label="Review" onPressWhenDisabled={onPressWhenDisabled} disabled loading />,
+    );
+    fireEvent.press(screen.getByRole('button', { name: 'Review' }));
+    expect(onPressWhenDisabled).not.toHaveBeenCalled();
+  });
 });

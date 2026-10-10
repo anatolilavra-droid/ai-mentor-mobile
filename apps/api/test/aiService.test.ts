@@ -74,7 +74,7 @@ describe('AIService.reviewCode', () => {
     const result = await makeService(createMockProvider()).reviewCode(await makeCall(), review);
 
     expect(codeReviewOutputSchema.parse(result.review).summary).toContain('Mock explain of');
-    expect(result.promptVersion).toBe('code-review/v2');
+    expect(result.promptVersion).toBe('code-review/v3');
     expect(result.input).toEqual({
       language: 'javascript',
       action: 'explain',

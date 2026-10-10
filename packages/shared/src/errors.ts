@@ -16,6 +16,8 @@ export const ERROR_CODES = [
   'INTERNAL_ERROR',
   'AI_PROVIDER_ERROR',
   'AI_INVALID_RESPONSE',
+  /** The AI provider is overloaded or rate-limited right now; try again in a minute. */
+  'AI_PROVIDER_BUSY',
   'SERVICE_UNAVAILABLE',
   'TIMEOUT',
 ] as const;

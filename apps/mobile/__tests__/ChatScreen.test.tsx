@@ -114,6 +114,24 @@ describe('ChatScreen', () => {
     expect(api.chat).toHaveBeenLastCalledWith({ message: 'Hi there', history: [] });
   });
 
+  it('says the AI service is busy and retries only when asked', async () => {
+    api.chat.mockRejectedValueOnce(new ApiError('AI_PROVIDER_BUSY', { status: 503 }));
+    api.chat.mockResolvedValueOnce(answer('Here you go.', 4));
+    renderWithProviders(<ChatScreen />);
+
+    sendMessage('Hi there');
+
+    expect(
+      await screen.findByText('The AI service is overloaded right now. Try again in a minute.'),
+    ).toBeOnTheScreen();
+    expect(api.chat).toHaveBeenCalledTimes(1);
+
+    fireEvent.press(screen.getByTestId('chat-retry'));
+
+    expect(await screen.findByText('Here you go.')).toBeOnTheScreen();
+    expect(api.chat).toHaveBeenCalledTimes(2);
+  });
+
   it('shows the limit card without Retry when the monthly limit is used up', async () => {
     api.chat.mockRejectedValue(
       new ApiError('USAGE_LIMIT_REACHED', {

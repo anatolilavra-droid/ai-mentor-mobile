@@ -1,4 +1,9 @@
-import { ISSUE_SEVERITIES, type CodeReviewAction, type CodeReviewOutput } from '@ai-mentor/shared';
+import {
+  ISSUE_SEVERITIES,
+  countCodeLines,
+  type CodeReviewAction,
+  type CodeReviewOutput,
+} from '@ai-mentor/shared';
 
 const SEVERITY_RANK = new Map(ISSUE_SEVERITIES.map((severity, index) => [severity, index]));
 
@@ -46,4 +51,16 @@ export function finalizeReview(
     nextStep: output.nextStep,
     confidence: output.confidence,
   };
+}
+
+/**
+ * True when the learner sent several lines but the fixed code came back on one
+ * line (a layout the app cannot show usefully). Only line counts are compared.
+ */
+export function isFixedCodeCollapsed(review: CodeReviewOutput, inputLines: number): boolean {
+  return (
+    inputLines > 1 &&
+    review.fixedCode !== undefined &&
+    countCodeLines(review.fixedCode.trim()) === 1
+  );
 }

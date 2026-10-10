@@ -137,6 +137,8 @@ describe('API error messages', () => {
     expect(apiErrorMessageKey(new ApiError('NETWORK'))).toBe('chat.errors.network');
     expect(apiErrorMessageKey(new ApiError('TIMEOUT'))).toBe('chat.errors.timeout');
     expect(apiErrorMessageKey(new ApiError('AI_PROVIDER_ERROR'))).toBe('chat.errors.unavailable');
+    expect(apiErrorMessageKey(new ApiError('AI_PROVIDER_BUSY'))).toBe('chat.errors.busy');
+    expect(isRetryable(new ApiError('AI_PROVIDER_BUSY'))).toBe(true);
     expect(apiErrorMessageKey(new Error('x'))).toBe('chat.errors.generic');
     expect(isRetryable(new ApiError('NETWORK'))).toBe(true);
     expect(isRetryable(new ApiError('USAGE_LIMIT_REACHED'))).toBe(false);

@@ -45,6 +45,16 @@ export const lineHeights = {
   label: 16,
 } as const;
 
+/**
+ * Code is shown glyph by glyph: JetBrains Mono's programming ligatures (`<=` as ⩽,
+ * `i++` as one glyph) live in the contextual alternates (`calt`), so both
+ * ligature features are switched off. Android and iOS support both values.
+ */
+export const codeFontVariant: NonNullable<TextStyle['fontVariant']> = [
+  'no-common-ligatures',
+  'no-contextual',
+];
+
 export const letterSpacings = {
   tight: -0.6,
   snug: -0.3,
@@ -55,7 +65,7 @@ export const letterSpacings = {
 
 export type TextVariantStyle = Pick<
   TextStyle,
-  'fontFamily' | 'fontSize' | 'lineHeight' | 'letterSpacing' | 'textTransform'
+  'fontFamily' | 'fontSize' | 'lineHeight' | 'letterSpacing' | 'textTransform' | 'fontVariant'
 > & {
   /** Upper bound for system font scaling, keeps large type from breaking layouts. */
   maxFontSizeMultiplier: number;
@@ -138,6 +148,7 @@ export const textVariants = {
     fontSize: fontSizes.code,
     lineHeight: lineHeights.code,
     letterSpacing: letterSpacings.normal,
+    fontVariant: codeFontVariant,
     maxFontSizeMultiplier: 1.6,
   },
 } as const satisfies Record<string, TextVariantStyle>;

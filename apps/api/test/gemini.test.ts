@@ -130,7 +130,7 @@ describe('Gemini provider', () => {
   it.each([
     [429, 'rate_limited'],
     [500, 'unavailable'],
-    [503, 'unavailable'],
+    [503, 'overloaded'],
     [403, 'unavailable'],
     [504, 'timeout'],
   ])('maps HTTP %i to %s', async (status, kind) => {
@@ -138,6 +138,24 @@ describe('Gemini provider', () => {
       throw new ApiError({ message: 'upstream detail', status });
     });
     await expectKind(gemini.generateText(textInput()), kind);
+  });
+
+  it('treats an UNAVAILABLE answer as overloaded', async () => {
+    const { gemini } = provider(async () => {
+      throw new ApiError({
+        message: '{"error":{"code":503,"message":"high demand","status":"UNAVAILABLE"}}',
+        status: 503,
+      });
+    });
+    await expectKind(
+      gemini.reviewCode({
+        ...textInput(),
+        language: 'javascript',
+        action: 'fix',
+        outputJsonSchema: {},
+      }),
+      'overloaded',
+    );
   });
 
   it('passes abort errors through untouched', async () => {

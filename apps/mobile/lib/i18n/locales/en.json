@@ -150,6 +150,7 @@
       "limitReached": "You have reached this month's limit.",
       "invalid": "This message could not be sent. Try a shorter message.",
       "unavailable": "The mentor is unavailable right now. Try again in a moment.",
+      "busy": "The AI service is overloaded right now. Try again in a minute.",
       "generic": "Something went wrong. Try again."
     }
   },
@@ -198,6 +199,10 @@
       "invalidCharacters": "The code contains characters that cannot be sent."
     },
     "submit": "Review code",
+    "submitHint": {
+      "empty": "Paste your code to start the review.",
+      "invalid": "Fix the problem with your code above to start the review."
+    },
     "pending": "The mentor is reading your code…",
     "cancel": "Cancel",
     "secrets": {
@@ -218,7 +223,8 @@
     },
     "errors": {
       "timeout": "The review took too long. Try again or shorten the code.",
-      "invalidResponse": "The mentor's answer could not be read. Try again."
+      "invalidResponse": "The mentor's answer could not be read. Try again.",
+      "busy": "The AI service is overloaded right now. Try again in a minute."
     },
     "limit": {
       "title": "You have used this month's code reviews",

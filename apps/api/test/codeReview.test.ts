@@ -84,7 +84,7 @@ describe('POST /api/ai/code-review', () => {
     expect(res.status).toBe(200);
     const body = codeReviewResponseSchema.parse(res.body);
     expect(body.provider).toBe('mock');
-    expect(body.promptVersion).toBe('code-review/v2');
+    expect(body.promptVersion).toBe('code-review/v3');
     expect(body.requestId).toBe(res.headers['x-request-id']);
     expect(body.input).toEqual({ language: 'javascript', action, chars: CODE.length, lines: 3 });
     expect(body.usage.quota).toEqual({ used: 1, limit: 10, period: 'month' });
@@ -205,19 +205,58 @@ describe('POST /api/ai/code-review', () => {
     expect(supabase.usage.get(USER_A)?.code_review ?? 0).toBe(0);
   });
 
-  it('maps provider failures to typed errors', async () => {
+  it.each([
+    ['unavailable', 502, 'AI_PROVIDER_ERROR'],
+    ['refused', 502, 'AI_PROVIDER_ERROR'],
+    ['rate_limited', 503, 'AI_PROVIDER_BUSY'],
+    ['overloaded', 503, 'AI_PROVIDER_BUSY'],
+  ] as const)('maps a provider "%s" failure to %i %s', async (kind, status, code) => {
+    let calls = 0;
     const provider: AIProvider = {
       ...createMockProvider(),
       reviewCode: async () => {
-        throw new AIProviderError('rate_limited', 'Gemini rate limit');
+        calls += 1;
+        throw new AIProviderError(kind, 'Gemini detail');
       },
     };
-    const { app } = buildTestApp({ aiProvider: provider });
+    const { app, supabase } = buildTestApp({ aiProvider: provider });
     const res = await postReview(app, { language: 'python', action: 'fix', code: 'print(1' });
 
-    expect(res.status).toBe(502);
-    expect(res.body.error.code).toBe('AI_PROVIDER_ERROR');
+    expect(res.status).toBe(status);
+    expect(errorResponseSchema.parse(res.body).error.code).toBe(code);
     expect(JSON.stringify(res.body)).not.toContain('Gemini');
+    // One provider call (no automatic retry) and the quota is not charged.
+    expect(calls).toBe(1);
+    expect(supabase.usage.get(USER_A)?.code_review ?? 0).toBe(0);
+  });
+
+  it('warns (without the code) when multi-line code comes back fixed on one line', async () => {
+    const marker = 'MARKER_one_line_9c1';
+    const { provider } = recordingProvider({
+      ...validAnswer,
+      fixedCode: `function add(a, b) { return a + b; } // ${marker}`,
+    });
+    const { app, logs } = buildTestApp({
+      aiProvider: provider,
+      config: { realAiUserIds: [USER_A] },
+    });
+    const res = await postReview(app, { language: 'javascript', action: 'fix', code: CODE });
+
+    expect(res.status).toBe(200);
+    expect(logs.text()).toContain('fixed code returned on one line');
+    expect(logs.text()).not.toContain(marker);
+  });
+
+  it('does not warn when the fixed code keeps its line breaks', async () => {
+    const { provider } = recordingProvider();
+    const { app, logs } = buildTestApp({
+      aiProvider: provider,
+      config: { realAiUserIds: [USER_A] },
+    });
+    const res = await postReview(app, { language: 'javascript', action: 'fix', code: CODE });
+
+    expect(res.status).toBe(200);
+    expect(logs.text()).not.toContain('fixed code returned on one line');
   });
 
   it('never logs the code or the answer', async () => {
