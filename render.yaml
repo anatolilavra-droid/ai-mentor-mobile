@@ -30,6 +30,11 @@ services:
         value: info
       - key: AI_PROVIDER
         value: gemini
+      # Code review answers take longer than chat; the request timeout must exceed both.
+      - key: CODE_REVIEW_AI_TIMEOUT_MS
+        value: '50000'
+      - key: REQUEST_TIMEOUT_MS
+        value: '60000'
       # Entered in the Render dashboard (never committed):
       - key: AI_MODEL
         sync: false

@@ -1,9 +1,12 @@
 import {
   chatResponseSchema,
+  codeReviewResponseSchema,
   errorResponseSchema,
   usageResponseSchema,
   type ChatRequest,
   type ChatResponse,
+  type CodeReviewRequest,
+  type CodeReviewResponse,
   type UsageResponse,
 } from '@ai-mentor/shared';
 import * as Crypto from 'expo-crypto';
@@ -66,6 +69,8 @@ export function createApiClient(deps: ApiClientDeps) {
     if (!deps.baseUrl) throw new ApiError('NOT_CONFIGURED');
     const token = await deps.getAccessToken(retriedAuth);
     if (!token) throw new ApiError('UNAUTHORIZED');
+    // The caller may have given up while the token was loading.
+    if (options.signal?.aborted) throw new ApiError('CANCELLED');
 
     const controller = new AbortController();
     let timedOut = false;
@@ -90,7 +95,9 @@ export function createApiClient(deps: ApiClientDeps) {
         signal: controller.signal,
       });
     } catch (error) {
-      throw new ApiError(timedOut ? 'CLIENT_TIMEOUT' : 'NETWORK', { cause: error });
+      if (timedOut) throw new ApiError('CLIENT_TIMEOUT', { cause: error });
+      if (options.signal?.aborted) throw new ApiError('CANCELLED', { cause: error });
+      throw new ApiError('NETWORK', { cause: error });
     } finally {
       clearTimeout(timer);
       options.signal?.removeEventListener('abort', onCallerAbort);
@@ -106,9 +113,9 @@ export function createApiClient(deps: ApiClientDeps) {
     if (!response.ok) {
       const parsed = errorResponseSchema.safeParse(json);
       if (!parsed.success) throw new ApiError('BAD_RESPONSE', { status: response.status });
-      const { code, requestId, quota } = parsed.data.error;
+      const { code, requestId, quota, details } = parsed.data.error;
       if (code === 'UNAUTHORIZED' && !retriedAuth) return send(options, true);
-      throw new ApiError(code, { status: response.status, requestId, quota });
+      throw new ApiError(code, { status: response.status, requestId, quota, details });
     }
 
     const parsed = options.schema.safeParse(json);
@@ -121,6 +128,19 @@ export function createApiClient(deps: ApiClientDeps) {
     chat(body: ChatRequest, signal?: AbortSignal): Promise<ChatResponse> {
       return send(
         { method: 'POST', path: '/api/ai/chat', body, schema: chatResponseSchema, signal },
+        false,
+      );
+    },
+    /** One code review. Never retried automatically: every call may use the AI quota. */
+    codeReview(body: CodeReviewRequest, signal?: AbortSignal): Promise<CodeReviewResponse> {
+      return send(
+        {
+          method: 'POST',
+          path: '/api/ai/code-review',
+          body,
+          schema: codeReviewResponseSchema,
+          signal,
+        },
         false,
       );
     },

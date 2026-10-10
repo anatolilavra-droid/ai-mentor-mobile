@@ -48,3 +48,20 @@ export function describeLearnerProfile(learner: LearnerContext): string {
 export function asUserData(tag: string, content: string): string {
   return `<${tag}>\n${content}\n</${tag}>`;
 }
+
+/**
+ * Like asUserData, with optional attributes, and the closing tag inside the
+ * content is neutralized so pasted text cannot end the block early. Used from
+ * code-review/v2 on; v1 prompts keep asUserData unchanged.
+ */
+export function asDelimitedData(
+  tag: string,
+  content: string,
+  attributes: Record<string, string> = {},
+): string {
+  const attrs = Object.entries(attributes)
+    .map(([name, value]) => ` ${name}="${value.replace(/[^a-z0-9_-]/gi, '')}"`)
+    .join('');
+  const safe = content.replace(new RegExp(`</(\\s*)${tag}`, 'gi'), `<\\/$1${tag}`);
+  return `<${tag}${attrs}>\n${safe}\n</${tag}>`;
+}

@@ -58,6 +58,40 @@ export const CHAT_HISTORY_DEFAULTS = {
 /** Longest AI answer the API returns and the app renders. */
 export const AI_ANSWER_MAX_LENGTH = 40_000;
 
+/** Code review: languages, actions and input limits (checked by the app and the API). */
+export const CODE_LANGUAGES = [
+  'javascript',
+  'typescript',
+  'html',
+  'css',
+  'python',
+  'json',
+] as const;
+export type CodeLanguage = (typeof CODE_LANGUAGES)[number];
+export const CODE_REVIEW_ACTIONS = ['explain', 'review', 'fix', 'improve'] as const;
+export type CodeReviewAction = (typeof CODE_REVIEW_ACTIONS)[number];
+export const MAX_CODE_REVIEW_CHARS = 8_000;
+export const MAX_CODE_REVIEW_LINES = 400;
+
+/** Code review answer bounds. */
+export const CODE_REVIEW_MAX_ISSUES = 30;
+export const CODE_REVIEW_MAX_STEPS = 15;
+export const CODE_REVIEW_MAX_CHANGES = 15;
+export const CODE_REVIEW_FIXED_CODE_MAX_CHARS = 16_000;
+export const ISSUE_SEVERITIES = ['error', 'warning', 'info'] as const;
+export type IssueSeverity = (typeof ISSUE_SEVERITIES)[number];
+export const ISSUE_CATEGORIES = [
+  'bug',
+  'security',
+  'performance',
+  'readability',
+  'style',
+  'best_practice',
+] as const;
+export type IssueCategory = (typeof ISSUE_CATEGORIES)[number];
+export const REVIEW_CONFIDENCE = ['high', 'medium', 'low'] as const;
+export type ReviewConfidence = (typeof REVIEW_CONFIDENCE)[number];
+
 /** AI providers the API may report in a response. */
 export const AI_PROVIDERS = ['mock', 'gemini'] as const;
 export type AIProviderName = (typeof AI_PROVIDERS)[number];

@@ -1,3 +1,5 @@
+import type { CodeLanguage } from '@ai-mentor/shared';
+
 import type {
   AIProvider,
   CodeReviewInput,
@@ -7,6 +9,61 @@ import type {
 } from './AIProvider.js';
 
 const MOCK_MODEL = 'mock-mentor-1';
+
+const DEMO_NOTE = 'Demo review: no real AI was called, the code is unchanged';
+
+/** A demo marker in the language's own comment syntax (JSON has none). */
+const COMMENT: Record<CodeLanguage, ((text: string) => string) | null> = {
+  javascript: (text) => `// ${text}`,
+  typescript: (text) => `// ${text}`,
+  python: (text) => `# ${text}`,
+  css: (text) => `/* ${text} */`,
+  html: (text) => `<!-- ${text} -->`,
+  json: null,
+};
+
+/** The learner's code back from the prompt's <learner_code> block. */
+function codeFromMessages(input: CodeReviewInput): string {
+  const content = input.messages.findLast((message) => message.role === 'user')?.content ?? '';
+  const match = /^<learner_code[^>]*>\n([\s\S]*)\n<\/learner_code>$/.exec(content);
+  return match?.[1] ?? '';
+}
+
+/**
+ * A deterministic answer that fills every part of the result screen for the
+ * chosen action, so demo accounts and tests see the whole flow.
+ */
+function mockReview(input: CodeReviewInput) {
+  const code = codeFromMessages(input);
+  const base = {
+    summary: `Mock ${input.action} of ${input.language} code (no real AI was called).`,
+    issues: [
+      {
+        severity: 'info',
+        category: 'readability',
+        line: 1,
+        title: 'Demo issue',
+        explanation: 'This is a sample issue that shows how real findings will look.',
+        suggestion: 'Read the code line by line and describe what each part does.',
+      },
+    ],
+    nextStep: 'Read the code line by line and describe what each part does.',
+    confidence: 'low',
+  };
+  if (input.action === 'explain') {
+    return {
+      ...base,
+      steps: ['The demo reads your code.', 'A real review explains it step by step here.'],
+    };
+  }
+  if (input.action === 'review') return base;
+  const comment = COMMENT[input.language];
+  return {
+    ...base,
+    fixedCode: comment ? `${comment(DEMO_NOTE)}\n${code}` : code,
+    changes: [comment ? 'Added a demo comment at the top.' : 'No changes in the demo.'],
+  };
+}
 
 /** Rough token estimate for the placeholder usage numbers. */
 function estimateTokens(text: string): number {
@@ -63,11 +120,7 @@ export function createMockProvider(options: { delayMs?: number } = {}): AIProvid
 
     async reviewCode(input: CodeReviewInput): Promise<CodeReviewResult> {
       if (delayMs > 0) await sleep(delayMs, input.signal);
-      const output = {
-        summary: `Mock ${input.task} review of ${input.language} code (no real AI was called).`,
-        issues: [],
-        nextStep: 'Read the code line by line and describe what each part does.',
-      };
+      const output = mockReview(input);
       return {
         output,
         model: MOCK_MODEL,

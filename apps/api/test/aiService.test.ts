@@ -1,9 +1,12 @@
-import { CHAT_HISTORY_DEFAULTS } from '@ai-mentor/shared';
+import {
+  CHAT_HISTORY_DEFAULTS,
+  codeReviewOutputSchema,
+  codeReviewRequestSchema,
+} from '@ai-mentor/shared';
 import pino from 'pino';
 import { describe, expect, it } from 'vitest';
 
 import { AppError } from '../src/errors/AppError.js';
-import { codeReviewOutputSchema } from '../src/schemas/code-review.schema.js';
 import { createAIService, type AICall } from '../src/services/ai/ai.service.js';
 import type { AIProvider } from '../src/services/ai/providers/AIProvider.js';
 import { createMockProvider } from '../src/services/ai/providers/mock.provider.js';
@@ -28,12 +31,16 @@ function makeService(provider: AIProvider) {
     selectProvider: () => provider,
     usageGuard: createSupabaseUsage(supabase.factory).guard,
     profileService: createProfileService(supabase.factory),
-    aiTimeoutMs: 1_000,
+    aiTimeouts: { chat: 1_000, code_review: 1_000 },
     historyLimits: CHAT_HISTORY_DEFAULTS,
   });
 }
 
-const review = { language: 'javascript', task: 'explain', code: 'let a = 1;' } as const;
+const review = codeReviewRequestSchema.parse({
+  language: 'javascript',
+  action: 'explain',
+  code: 'let a = 1;',
+});
 
 describe('mock provider', () => {
   it('never needs a key and answers deterministically', async () => {
@@ -66,8 +73,14 @@ describe('AIService.reviewCode', () => {
   it('returns a validated structured review from the mock provider', async () => {
     const result = await makeService(createMockProvider()).reviewCode(await makeCall(), review);
 
-    expect(codeReviewOutputSchema.parse(result.review).summary).toContain('Mock explain review');
-    expect(result.promptVersion).toBe('code-review/v1');
+    expect(codeReviewOutputSchema.parse(result.review).summary).toContain('Mock explain of');
+    expect(result.promptVersion).toBe('code-review/v2');
+    expect(result.input).toEqual({
+      language: 'javascript',
+      action: 'explain',
+      chars: 10,
+      lines: 1,
+    });
     expect(result.usage.quota).toEqual({ used: 1, limit: 10, period: 'month' });
   });
 

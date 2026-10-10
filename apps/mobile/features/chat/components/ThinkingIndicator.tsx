@@ -10,7 +10,10 @@ import { useMotionPreference } from '@/hooks/useMotionPreference';
 export const WAKE_HINT_AFTER_MS = 8_000;
 
 /** "Mentor is thinking…", plus a calm hint when the server needs time to wake up. */
-export function ThinkingIndicator() {
+export function ThinkingIndicator({
+  label,
+  testID = 'chat-thinking',
+}: { label?: string; testID?: string } = {}) {
   const { t } = useTranslation();
   const { reduceMotion } = useMotionPreference();
   const [slow, setSlow] = useState(false);
@@ -21,11 +24,11 @@ export function ThinkingIndicator() {
   }, []);
 
   return (
-    <View style={styles.row} accessibilityLiveRegion="polite" testID="chat-thinking">
+    <View style={styles.row} accessibilityLiveRegion="polite" testID={testID}>
       {reduceMotion ? null : <ActivityIndicator size="small" color={colors.accent.primary} />}
       <View style={styles.texts}>
         <Text variant="callout" color="secondary">
-          {t('chat.thinking')}
+          {label ?? t('chat.thinking')}
         </Text>
         {slow ? (
           <Text variant="caption" color="muted" testID="chat-waking">

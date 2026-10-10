@@ -183,7 +183,11 @@ export function createGeminiProvider(options: GeminiProviderOptions): AIProvider
           schema: input.outputJsonSchema,
         },
       );
-      const { text, usage } = readResponse(response);
+      const { text, finishReason, usage } = readResponse(response);
+      // A cut-off answer is incomplete JSON at best: report the real reason.
+      if (finishReason === FinishReason.MAX_TOKENS) {
+        throw new AIProviderError('invalid_response', 'Gemini review was cut off (MAX_TOKENS)');
+      }
       let output: unknown;
       try {
         output = JSON.parse(text);

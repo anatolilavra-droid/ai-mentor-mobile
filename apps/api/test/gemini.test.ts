@@ -1,4 +1,4 @@
-import { CHAT_HISTORY_DEFAULTS } from '@ai-mentor/shared';
+import { CHAT_HISTORY_DEFAULTS, codeReviewOutputSchema } from '@ai-mentor/shared';
 import { ApiError, FinishReason, type GenerateContentParameters } from '@google/genai';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
@@ -7,7 +7,6 @@ import { pino } from 'pino';
 import { z } from 'zod';
 
 import { AppError } from '../src/errors/AppError.js';
-import { codeReviewOutputSchema } from '../src/schemas/code-review.schema.js';
 import { createAIService } from '../src/services/ai/ai.service.js';
 import { createAIProvider } from '../src/services/ai/providers/index.js';
 import { AIProviderError } from '../src/services/ai/providers/AIProvider.js';
@@ -161,7 +160,7 @@ describe('Gemini provider', () => {
       system: 's',
       messages: [{ role: 'user', content: '<learner_code>\nx\n</learner_code>' }],
       language: 'javascript',
-      task: 'explain',
+      action: 'explain',
       outputJsonSchema: schema,
       maxOutputTokens: 100,
       signal: new AbortController().signal,
@@ -181,7 +180,26 @@ describe('Gemini provider', () => {
         system: 's',
         messages: [],
         language: 'javascript',
-        task: 'fix',
+        action: 'fix',
+        outputJsonSchema: {},
+        maxOutputTokens: 100,
+        signal: new AbortController().signal,
+      }),
+      'invalid_response',
+    );
+  });
+
+  it('reports a review cut off by the token limit as an invalid response', async () => {
+    const { gemini } = provider(async () => ({
+      text: '{"summary": "cut',
+      candidates: [{ finishReason: FinishReason.MAX_TOKENS }],
+    }));
+    await expectKind(
+      gemini.reviewCode({
+        system: 's',
+        messages: [],
+        language: 'python',
+        action: 'fix',
         outputJsonSchema: {},
         maxOutputTokens: 100,
         signal: new AbortController().signal,
@@ -305,28 +323,41 @@ describe('Gemini structured output schema', () => {
       type: 'object',
       properties: {
         summary: { type: 'string' },
+        steps: { type: 'array', items: { type: 'string' } },
         issues: {
           type: 'array',
           items: {
             type: 'object',
             properties: {
-              severity: { type: 'string', enum: ['info', 'warning', 'error'] },
+              severity: { type: 'string', enum: ['error', 'warning', 'info'] },
+              category: {
+                type: 'string',
+                enum: ['bug', 'security', 'performance', 'readability', 'style', 'best_practice'],
+              },
               line: { type: 'integer' },
-              message: { type: 'string' },
+              title: { type: 'string' },
+              explanation: { type: 'string' },
               suggestion: { type: 'string' },
             },
-            required: ['severity', 'message', 'suggestion'],
+            required: ['severity', 'category', 'title', 'explanation', 'suggestion'],
           },
         },
-        improvedCode: { type: 'string' },
+        fixedCode: { type: 'string' },
+        changes: { type: 'array', items: { type: 'string' } },
         nextStep: { type: 'string' },
+        confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
       },
-      required: ['summary', 'issues', 'nextStep'],
+      required: ['summary', 'issues', 'nextStep', 'confidence'],
     });
   });
 
   it('sends the reduced schema and still rejects answers that break the full schema', async () => {
-    const tooLong = { summary: 'x'.repeat(3_000), issues: [], nextStep: 'next' };
+    const tooLong = {
+      summary: 'x'.repeat(3_000),
+      issues: [],
+      nextStep: 'next',
+      confidence: 'high',
+    };
     const fake = fakeModels(async () => ok(JSON.stringify(tooLong)));
     const gemini = createGeminiProvider({
       apiKey: 'test-key-not-real-000000',
@@ -338,7 +369,7 @@ describe('Gemini structured output schema', () => {
       selectProvider: () => gemini,
       usageGuard: createSupabaseUsage(supabase.factory).guard,
       profileService: createProfileService(supabase.factory),
-      aiTimeoutMs: 1_000,
+      aiTimeouts: { chat: 1_000, code_review: 1_000 },
       historyLimits: CHAT_HISTORY_DEFAULTS,
     });
 
@@ -350,7 +381,7 @@ describe('Gemini structured output schema', () => {
           signal: new AbortController().signal,
           log: pino({ level: 'silent' }),
         },
-        { language: 'javascript', task: 'explain', code: 'let a = 1;' },
+        { language: 'javascript', action: 'explain', code: 'let a = 1;' },
       ),
     ).rejects.toSatisfy(
       (error) => error instanceof AppError && error.code === 'AI_INVALID_RESPONSE',

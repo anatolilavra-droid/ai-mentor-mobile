@@ -23,7 +23,10 @@ import type { UsageGuard } from './services/usage/UsageGuard.js';
 
 export type AppConfig = {
   version: string;
+  /** AI timeout for chat answers. */
   aiTimeoutMs: number;
+  /** AI timeout for code review answers. */
+  codeReviewAiTimeoutMs: number;
   requestTimeoutMs: number;
   jsonBodyLimit: string;
   rateLimitIp: { max: number; windowMs: number };
@@ -66,7 +69,7 @@ export function createApp(deps: AppDeps): Express {
     }),
     usageGuard: deps.usageGuard ?? usage.guard,
     profileService,
-    aiTimeoutMs: config.aiTimeoutMs,
+    aiTimeouts: { chat: config.aiTimeoutMs, code_review: config.codeReviewAiTimeoutMs },
     historyLimits: config.historyLimits,
   });
   const auth = requireAuth(deps.tokenVerifier);

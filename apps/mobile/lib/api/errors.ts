@@ -1,20 +1,31 @@
-import type { ErrorCode, QuotaDetail } from '@ai-mentor/shared';
+import type { ErrorCode, ErrorDetail, QuotaDetail } from '@ai-mentor/shared';
 
 import type { TranslationKey } from '@/lib/i18n';
 
-/** API error codes plus the failures that happen before or around a response. */
+/**
+ * API error codes plus the failures that happen before or around a response.
+ * CANCELLED: the caller aborted the request on purpose (no message is shown).
+ */
 export type ApiErrorCode =
-  ErrorCode | 'NOT_CONFIGURED' | 'NETWORK' | 'CLIENT_TIMEOUT' | 'BAD_RESPONSE';
+  ErrorCode | 'NOT_CONFIGURED' | 'NETWORK' | 'CLIENT_TIMEOUT' | 'BAD_RESPONSE' | 'CANCELLED';
 
 export class ApiError extends Error {
   readonly code: ApiErrorCode;
   readonly status: number | null;
   readonly requestId: string | null;
   readonly quota: QuotaDetail | null;
+  /** Validation details (field path and a stable message key). */
+  readonly details: readonly ErrorDetail[];
 
   constructor(
     code: ApiErrorCode,
-    options: { status?: number; requestId?: string; quota?: QuotaDetail; cause?: unknown } = {},
+    options: {
+      status?: number;
+      requestId?: string;
+      quota?: QuotaDetail;
+      details?: readonly ErrorDetail[];
+      cause?: unknown;
+    } = {},
   ) {
     super(code, { cause: options.cause });
     this.name = 'ApiError';
@@ -22,6 +33,7 @@ export class ApiError extends Error {
     this.status = options.status ?? null;
     this.requestId = options.requestId ?? null;
     this.quota = options.quota ?? null;
+    this.details = options.details ?? [];
   }
 }
 
@@ -62,6 +74,7 @@ export function apiErrorMessageKey(error: unknown): TranslationKey {
 export function isRetryable(error: unknown): boolean {
   if (!isApiError(error)) return true;
   return ![
+    'CANCELLED',
     'NOT_CONFIGURED',
     'USAGE_LIMIT_REACHED',
     'VALIDATION_ERROR',

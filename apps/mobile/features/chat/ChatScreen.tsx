@@ -1,4 +1,5 @@
-import { MessageSquareText, PlugZap } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { MessageSquareText, PlugZap, SearchCode } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View, type ScrollView } from 'react-native';
@@ -76,14 +77,24 @@ function Conversation() {
       />
       <View style={styles.toolbar}>
         <QuotaBadge />
-        {entries.length > 0 ? (
+        <View style={styles.toolbarActions}>
           <Button
-            label={t('chat.startOver')}
+            label={t('codeReview.open')}
+            leadingIcon={SearchCode}
             variant="ghost"
-            onPress={startOver}
-            disabled={isPending}
+            onPress={() => router.push('/code-review')}
+            accessibilityHint={t('codeReview.openHint')}
+            testID="chat-open-code-review"
           />
-        ) : null}
+          {entries.length > 0 ? (
+            <Button
+              label={t('chat.startOver')}
+              variant="ghost"
+              onPress={startOver}
+              disabled={isPending}
+            />
+          ) : null}
+        </View>
       </View>
 
       {entries.length === 0 ? (
@@ -149,6 +160,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: layout.minTouchTarget,
     marginBottom: spacing.sm,
+  },
+  toolbarActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    flexShrink: 1,
   },
   messages: {
     gap: spacing.md,

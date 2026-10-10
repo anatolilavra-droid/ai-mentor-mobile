@@ -35,13 +35,14 @@ secret or a real AI key in `.env.example` or in code.
 
 ## Endpoints
 
-| Method | Path                | Auth | Description                                          |
-| ------ | ------------------- | ---- | ---------------------------------------------------- |
-| GET    | `/health`           | no   | Liveness: `{ status, version, uptimeSeconds }`       |
-| GET    | `/api/me`           | yes  | The signed-in user's own profile (via RLS)           |
-| GET    | `/api/usage`        | yes  | Own plan, period and monthly usage per feature       |
-| GET    | `/api/subscription` | yes  | Own plan and status (no row means Free)              |
-| POST   | `/api/ai/chat`      | yes  | AI mentor answer (mock, or Gemini for allowed users) |
+| Method | Path                  | Auth | Description                                          |
+| ------ | --------------------- | ---- | ---------------------------------------------------- |
+| GET    | `/health`             | no   | Liveness: `{ status, version, uptimeSeconds }`       |
+| GET    | `/api/me`             | yes  | The signed-in user's own profile (via RLS)           |
+| GET    | `/api/usage`          | yes  | Own plan, period and monthly usage per feature       |
+| GET    | `/api/subscription`   | yes  | Own plan and status (no row means Free)              |
+| POST   | `/api/ai/chat`        | yes  | AI mentor answer (mock, or Gemini for allowed users) |
+| POST   | `/api/ai/code-review` | yes  | Structured review of pasted code (never executed)    |
 
 Authenticated requests send `Authorization: Bearer <Supabase access token>`.
 
@@ -90,6 +91,65 @@ Response:
 `provider` is `"gemini"` for users in `AI_REAL_PROVIDER_USER_IDS` when Gemini is on.
 `usage.quota` is the monthly quota after this answer. Only successful answers
 are counted.
+
+### POST /api/ai/code-review
+
+Request:
+
+```json
+{ "language": "javascript", "action": "fix", "code": "function add(a, b) {\n  a + b;\n}" }
+```
+
+- `language`: `javascript`, `typescript`, `html`, `css`, `python`, `json`.
+- `action`: `explain` (step by step), `review` (find problems), `fix`
+  (corrected code), `improve` (cleaner code, same behaviour).
+- `code`: line endings are normalized to `\n`; it is rejected when it is empty,
+  longer than `MAX_CODE_REVIEW_CHARS` (8 000) characters, longer than
+  `MAX_CODE_REVIEW_LINES` (400) lines, or contains a NUL character.
+  `checkCodeInput()` from `@ai-mentor/shared` is the single check, used by the
+  app (live counters, disabled button) and by this schema (source of truth).
+  Each failed rule becomes a `details` item `{ "path": "code", "message": "tooManyLines" }`
+  with a stable key: `empty`, `tooManyChars`, `tooManyLines`, `invalidCharacters`.
+
+Response (prompt `code-review/v2`, validated with Zod, then normalized by
+`finalizeReview()`: issues ordered error → warning → info, line numbers
+outside the code dropped, only the parts the action uses kept):
+
+```json
+{
+  "review": {
+    "summary": "…",
+    "steps": ["explain only"],
+    "issues": [
+      {
+        "severity": "error",
+        "category": "bug",
+        "line": 2,
+        "title": "…",
+        "explanation": "…",
+        "suggestion": "…"
+      }
+    ],
+    "fixedCode": "fix / improve only",
+    "changes": ["…"],
+    "nextStep": "…",
+    "confidence": "high"
+  },
+  "provider": "gemini",
+  "promptVersion": "code-review/v2",
+  "requestId": "…",
+  "input": { "language": "javascript", "action": "fix", "chars": 34, "lines": 3 },
+  "usage": {
+    "inputTokens": 400,
+    "outputTokens": 300,
+    "quota": { "used": 4, "limit": 10, "period": "month" }
+  }
+}
+```
+
+The code itself is never returned or logged (logs keep language, action,
+chars and lines). Only successful reviews count against the monthly
+`code_review` quota.
 
 ### GET /api/usage
 
@@ -162,8 +222,11 @@ helmet → request id + log → abort signal → request timeout → per-IP limi
   tokens, chat messages and code are never logged.
 - **Rate limits**: a generous per-IP limit on every route and a strict
   per-user limit on AI routes. Both are in memory (one instance).
-- **Timeouts**: JWKS and Supabase 5 s, AI call `AI_TIMEOUT_MS`, whole request
-  `REQUEST_TIMEOUT_MS`. A timeout or a client disconnect aborts the AI call.
+- **Timeouts**: JWKS and Supabase 5 s; AI call `AI_TIMEOUT_MS` (chat, 30 s) or
+  `CODE_REVIEW_AI_TIMEOUT_MS` (code review, 50 s); whole request
+  `REQUEST_TIMEOUT_MS` (60 s, must be greater than both AI timeouts). A
+  timeout or a client disconnect aborts the provider request (504 `TIMEOUT`),
+  and nothing is counted against the quota.
 - **Usage and plans**: before an AI call the API reads the caller's quota with
   `get_my_ai_quotas()`; after a successful answer it calls
   `record_my_ai_usage()`. Both run as the user (no service key) and touch only
@@ -189,6 +252,9 @@ helmet → request id + log → abort signal → request timeout → per-IP limi
   edited: changes go into a new version and `src/prompts/registry.ts` points to
   it. User text is passed as delimited data, never inside the system prompt.
   Chat uses `chat/v2` (history + onboarding context); `chat/v1` stays unchanged.
+  Code review uses `code-review/v2` (four actions, categories, steps, changes,
+  confidence; the code is sent in `<learner_code language="…">` with any
+  closing tag inside it neutralized); `code-review/v1` stays unchanged.
 - **No code execution**: user code is data only. ESLint forbids `eval`,
   `new Function`, `vm`, `child_process` and `worker_threads`.
 
@@ -207,7 +273,8 @@ GitHub → Actions → **AI smoke test** → Run workflow:
    and variables → Actions → Secrets). Never a variable, never in chat.
 2. Run with an empty `model`: the run summary lists the model ids the key can use.
 3. Run again with one id: the summary shows a real answer to a fixed question
-   and a schema-checked code review, with latency and token counts.
+   and a schema-checked code review for each action (explain, review, fix,
+   improve) of one fixed sample, with latency and token counts.
 
 Only fixed sample content is sent. The key is never printed.
 

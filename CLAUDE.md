@@ -664,8 +664,15 @@ Observed latency: chat about 9 s, code review about 17 s (AI timeout 30 s).
   "AI smoke test" workflow. The model id comes from that workflow's listing,
   never guessed.
 
-Phase 5b: hosting and the chat screen — implemented, waiting for Anatoliy's
-review and the on-device check.
+Phase 5b: hosting and the chat screen — deployed and checked on a phone.
+The API runs on Render Free (Frankfurt, service ai-mentor-api, manual
+deploys); "API live check" passes and the preview APK uses EXPO_PUBLIC_API_URL.
+Verified on a physical Android device: real Gemini answers for Anatoliy's
+account, follow-ups through the short history ("explain it simpler"), the
+monthly quota counter, Markdown and code copy, and demo answers for a second
+account. The first on-device failure was a wrong GEMINI_API_KEY value in
+Render (Gemini 401); replacing the key fixed it, no code change.
+Not yet checked on a device: the limit screen and the wake-up after sleep.
 - packages/shared (@ai-mentor/shared): platform-neutral Zod schemas, types
   and constants used by apps/api and apps/mobile (enums and limits, chat
   request/response, error format, plans and usage, trimConversationHistory).
@@ -683,6 +690,31 @@ review and the on-device check.
 - render.yaml: Render Free, Frankfurt, autoDeployTrigger off, secrets as
   `sync: false`. The deployment is created and started by Anatoliy only.
   EXPO_PUBLIC_API_URL (public) points the app to the API.
+
+Phase 6: AI Code Review — implemented, waiting for Anatoliy's review and the
+on-device check.
+- Stack routes /code-review (input) and /code-review/result, opened from Home
+  (quick actions "Explain my code" and "Fix an error", with ?action=) and from
+  the chat header. No sixth tab. Back keeps the input; the flow's state lives
+  in memory only (codeReview.store) and is cleared on sign out.
+- Languages javascript, typescript, html, css, python, json; actions explain,
+  review, fix, improve. MAX_CODE_REVIEW_CHARS (8 000) and
+  MAX_CODE_REVIEW_LINES (400) live in @ai-mentor/shared; checkCodeInput() is
+  the one check for the app (live counters, disabled button) and the API
+  request schema (source of truth, stable detail keys).
+- POST /api/ai/code-review: prompt code-review/v2 (code-review/v1 unchanged),
+  structured JSON validated with Zod and normalized by finalizeReview(); the
+  code is never returned or logged. Free 10 / Pro 200 reviews a month, only
+  successful reviews counted.
+- Timeouts from env: CODE_REVIEW_AI_TIMEOUT_MS=50000 (chat keeps
+  AI_TIMEOUT_MS), REQUEST_TIMEOUT_MS=60000 and greater than both. A timeout
+  aborts the provider request; the app shows a typed message and Retry and
+  never repeats an AI request by itself; Cancel aborts a running review.
+- findPossibleSecrets() (shared, heuristic) runs on the device before
+  sending: it reports kinds and line numbers only, never values, and the app
+  asks "Cancel" / "Send anyway". The code is never changed automatically.
+- Results are plain text and a copyable CodeBlock: no Markdown, HTML or
+  WebView, and code is never executed or rendered. Saving results comes later.
 
 Next phase: not defined yet — wait for Anatoliy's instructions.
 

@@ -153,6 +153,114 @@
       "generic": "Something went wrong. Try again."
     }
   },
+  "codeReview": {
+    "eyebrow": "Code review",
+    "title": "Review your code.",
+    "subtitle": "Paste code, pick a language and what the mentor should do. Nothing is run — the mentor only reads it.",
+    "back": "Back",
+    "open": "Code review",
+    "openHint": "Opens the code review screen",
+    "languageLabel": "Language",
+    "languages": {
+      "javascript": "JavaScript",
+      "typescript": "TypeScript",
+      "html": "HTML",
+      "css": "CSS",
+      "python": "Python",
+      "json": "JSON"
+    },
+    "actionLabel": "What should the mentor do?",
+    "actions": {
+      "explain": {
+        "title": "Explain",
+        "description": "What the code does, step by step"
+      },
+      "review": {
+        "title": "Review",
+        "description": "Find bugs, risks and style problems"
+      },
+      "fix": {
+        "title": "Fix",
+        "description": "Find bugs and get a corrected version"
+      },
+      "improve": {
+        "title": "Improve",
+        "description": "Cleaner, safer code that does the same"
+      }
+    },
+    "codeLabel": "Your code",
+    "codePlaceholder": "Paste your code here…",
+    "counter": "{{chars}} / {{maxChars}} characters · {{lines}} / {{maxLines}} lines",
+    "input": {
+      "empty": "Paste some code to review.",
+      "tooManyChars": "The code is longer than {{max}} characters. Shorten it to continue.",
+      "tooManyLines": "The code has more than {{max}} lines. Shorten it to continue.",
+      "invalidCharacters": "The code contains characters that cannot be sent."
+    },
+    "submit": "Review code",
+    "pending": "The mentor is reading your code…",
+    "cancel": "Cancel",
+    "secrets": {
+      "title": "Possible secret in the code",
+      "intro": "The code may contain a potential secret.",
+      "line": "Line {{line}}: {{kind}}",
+      "risk": "The code is sent to the server and the AI provider. If this is a real key or password, remove it or replace it with a placeholder. The check is approximate and can be wrong.",
+      "cancel": "Cancel",
+      "send": "Send anyway",
+      "kinds": {
+        "private_key": "a private key header",
+        "api_key": "looks like an API key",
+        "access_token": "looks like an access token",
+        "jwt": "looks like a JWT token",
+        "credential_assignment": "a password or secret in the code",
+        "connection_string": "a connection string with a password"
+      }
+    },
+    "errors": {
+      "timeout": "The review took too long. Try again or shorten the code.",
+      "invalidResponse": "The mentor's answer could not be read. Try again."
+    },
+    "limit": {
+      "title": "You have used this month's code reviews",
+      "used": "{{used}} of {{limit}} reviews used."
+    },
+    "result": {
+      "eyebrow": "Result",
+      "title": "Review ready.",
+      "notRun": "The code was not run: this is a careful reading of it.",
+      "summary": "Summary",
+      "steps": "Step by step",
+      "issues": "Issues",
+      "noIssues": "No issues found.",
+      "line": "Line {{line}}",
+      "suggestion": "How to fix",
+      "fixedCode": "Corrected code",
+      "improvedCode": "Improved code",
+      "noChanges": "No changes were needed.",
+      "changes": "What changed",
+      "nextStep": "Next step",
+      "confidence": {
+        "high": "High confidence",
+        "medium": "Medium confidence",
+        "low": "Low confidence"
+      },
+      "severity": {
+        "error": "Error",
+        "warning": "Warning",
+        "info": "Tip"
+      },
+      "category": {
+        "bug": "Bug",
+        "security": "Security",
+        "performance": "Performance",
+        "readability": "Readability",
+        "style": "Style",
+        "best_practice": "Best practice"
+      },
+      "editCode": "Edit code",
+      "newReview": "New review"
+    }
+  },
   "codeBlock": {
     "plainLanguage": "text",
     "copy": "Copy",

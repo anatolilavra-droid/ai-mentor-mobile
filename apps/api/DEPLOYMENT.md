@@ -50,6 +50,24 @@ deploys automatically.
 Later deploys: Render → `ai-mentor-api` → **Manual Deploy** → Deploy latest
 commit.
 
+Blueprint sync: Render applies changes to `render.yaml` on `main` (plan,
+region, non-secret variables such as `CODE_REVIEW_AI_TIMEOUT_MS` and
+`REQUEST_TIMEOUT_MS`) by itself. New code still deploys only with
+**Manual Deploy**. Secrets (`sync: false`) are never touched by the sync.
+
+## Timeouts
+
+| Variable                    | Default | Purpose                                              |
+| --------------------------- | ------- | ---------------------------------------------------- |
+| `AI_TIMEOUT_MS`             | 30 000  | one chat answer                                      |
+| `CODE_REVIEW_AI_TIMEOUT_MS` | 50 000  | one code review (structured JSON with fixed code)    |
+| `REQUEST_TIMEOUT_MS`        | 60 000  | whole request; must be greater than both AI timeouts |
+
+The app waits up to 90 seconds (enough for a wake-up after sleep). A timeout
+returns `TIMEOUT` (504), aborts the provider request and is not counted
+against the quota; the app offers Retry and never repeats an AI request by
+itself.
+
 ## Runtime requirements
 
 - Node.js 22 (`NODE_VERSION` in `render.yaml`, `.nvmrc` locally).

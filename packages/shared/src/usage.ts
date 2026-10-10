@@ -15,6 +15,16 @@ export const quotaSchema = z
   .strict();
 export type Quota = z.infer<typeof quotaSchema>;
 
+/** Token usage of one AI call and the monthly quota of its feature after it. */
+export const aiUsageSchema = z
+  .object({
+    inputTokens: z.number().int().nonnegative(),
+    outputTokens: z.number().int().nonnegative(),
+    quota: quotaSchema,
+  })
+  .strict();
+export type AIUsage = z.infer<typeof aiUsageSchema>;
+
 const featureUsageSchema = z
   .object({
     used: z.number().int().nonnegative(),

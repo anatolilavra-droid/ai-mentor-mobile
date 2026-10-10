@@ -4,6 +4,7 @@ import { AppState, Platform } from 'react-native';
 
 import { queryClient } from '@/lib/query/queryClient';
 import { supabase } from '@/lib/supabase/client';
+import { useCodeReviewStore } from '@/features/code-review/codeReview.store';
 import { useOnboardingDraftStore } from '@/stores/onboardingDraft.store';
 
 export type AuthStatus = 'initializing' | 'signedOut' | 'signedIn';
@@ -56,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         queryClient.clear();
         // Drafts may hold personal answers; do not leave them on a shared device.
         useOnboardingDraftStore.getState().clearAll();
+        // Pasted code may contain secrets: drop it with the session.
+        useCodeReviewStore.getState().clear();
       }
     });
 

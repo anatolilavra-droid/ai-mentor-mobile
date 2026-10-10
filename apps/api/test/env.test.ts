@@ -19,7 +19,8 @@ describe('parseEnv', () => {
       SUPABASE_URL: 'https://test-project.supabase.co',
       AI_PROVIDER: 'mock',
       AI_TIMEOUT_MS: 30_000,
-      REQUEST_TIMEOUT_MS: 40_000,
+      CODE_REVIEW_AI_TIMEOUT_MS: 50_000,
+      REQUEST_TIMEOUT_MS: 60_000,
       TRUST_PROXY: 0,
     });
   });
@@ -31,13 +32,19 @@ describe('parseEnv', () => {
     expect(JSON.stringify(result)).not.toContain('super_secret');
   });
 
-  it('requires the request timeout to be longer than the AI timeout', () => {
-    const result = parseEnv({ ...valid, AI_TIMEOUT_MS: '30000', REQUEST_TIMEOUT_MS: '30000' });
-
-    expect(result).toEqual({
+  it('requires the request timeout to be longer than every AI timeout', () => {
+    const problem =
+      'REQUEST_TIMEOUT_MS: must be greater than AI_TIMEOUT_MS and CODE_REVIEW_AI_TIMEOUT_MS';
+    expect(parseEnv({ ...valid, AI_TIMEOUT_MS: '30000', REQUEST_TIMEOUT_MS: '30000' })).toEqual({
       ok: false,
-      problems: ['REQUEST_TIMEOUT_MS: must be greater than AI_TIMEOUT_MS'],
+      problems: [problem],
     });
+    expect(
+      parseEnv({ ...valid, CODE_REVIEW_AI_TIMEOUT_MS: '60000', REQUEST_TIMEOUT_MS: '60000' }),
+    ).toEqual({ ok: false, problems: [problem] });
+    expect(
+      parseEnv({ ...valid, CODE_REVIEW_AI_TIMEOUT_MS: '50000', REQUEST_TIMEOUT_MS: '50001' }).ok,
+    ).toBe(true);
   });
 
   it('refuses the mock provider in production', () => {

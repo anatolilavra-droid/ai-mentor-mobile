@@ -153,6 +153,114 @@
       "generic": "Etwas ist schiefgelaufen. Versuche es erneut."
     }
   },
+  "codeReview": {
+    "eyebrow": "Code-Review",
+    "title": "Prüfe deinen Code.",
+    "subtitle": "Füge Code ein, wähle Sprache und Aufgabe. Nichts wird ausgeführt — der Mentor liest den Code nur.",
+    "back": "Zurück",
+    "open": "Code-Review",
+    "openHint": "Öffnet das Code-Review",
+    "languageLabel": "Sprache",
+    "languages": {
+      "javascript": "JavaScript",
+      "typescript": "TypeScript",
+      "html": "HTML",
+      "css": "CSS",
+      "python": "Python",
+      "json": "JSON"
+    },
+    "actionLabel": "Was soll der Mentor tun?",
+    "actions": {
+      "explain": {
+        "title": "Erklären",
+        "description": "Was der Code macht, Schritt für Schritt"
+      },
+      "review": {
+        "title": "Prüfen",
+        "description": "Fehler, Risiken und Stilprobleme finden"
+      },
+      "fix": {
+        "title": "Korrigieren",
+        "description": "Fehler finden und eine korrigierte Version erhalten"
+      },
+      "improve": {
+        "title": "Verbessern",
+        "description": "Klarer und sicherer, bei gleichem Verhalten"
+      }
+    },
+    "codeLabel": "Dein Code",
+    "codePlaceholder": "Code hier einfügen…",
+    "counter": "{{chars}} / {{maxChars}} Zeichen · {{lines}} / {{maxLines}} Zeilen",
+    "input": {
+      "empty": "Füge Code für das Review ein.",
+      "tooManyChars": "Der Code ist länger als {{max}} Zeichen. Kürze ihn, um fortzufahren.",
+      "tooManyLines": "Der Code hat mehr als {{max}} Zeilen. Kürze ihn, um fortzufahren.",
+      "invalidCharacters": "Der Code enthält Zeichen, die nicht gesendet werden können."
+    },
+    "submit": "Code prüfen",
+    "pending": "Der Mentor liest deinen Code…",
+    "cancel": "Abbrechen",
+    "secrets": {
+      "title": "Möglicher Geheimwert im Code",
+      "intro": "Der Code kann einen möglichen Geheimwert enthalten.",
+      "line": "Zeile {{line}}: {{kind}}",
+      "risk": "Der Code wird an den Server und den KI-Anbieter gesendet. Wenn das ein echter Schlüssel oder ein Passwort ist, entferne ihn oder ersetze ihn durch einen Platzhalter. Die Prüfung ist ungefähr und kann sich irren.",
+      "cancel": "Abbrechen",
+      "send": "Trotzdem senden",
+      "kinds": {
+        "private_key": "Kopfzeile eines privaten Schlüssels",
+        "api_key": "sieht aus wie ein API-Schlüssel",
+        "access_token": "sieht aus wie ein Zugriffstoken",
+        "jwt": "sieht aus wie ein JWT-Token",
+        "credential_assignment": "Passwort oder Geheimwert im Code",
+        "connection_string": "Verbindungs-URL mit Passwort"
+      }
+    },
+    "errors": {
+      "timeout": "Das Review hat zu lange gedauert. Versuche es erneut oder kürze den Code.",
+      "invalidResponse": "Die Antwort des Mentors konnte nicht gelesen werden. Versuche es erneut."
+    },
+    "limit": {
+      "title": "Deine Code-Reviews für diesen Monat sind aufgebraucht",
+      "used": "{{used}} von {{limit}} Reviews genutzt."
+    },
+    "result": {
+      "eyebrow": "Ergebnis",
+      "title": "Review fertig.",
+      "notRun": "Der Code wurde nicht ausgeführt: Das ist ein sorgfältiges Lesen des Codes.",
+      "summary": "Zusammenfassung",
+      "steps": "Schritt für Schritt",
+      "issues": "Probleme",
+      "noIssues": "Keine Probleme gefunden.",
+      "line": "Zeile {{line}}",
+      "suggestion": "So behebst du es",
+      "fixedCode": "Korrigierter Code",
+      "improvedCode": "Verbesserter Code",
+      "noChanges": "Es waren keine Änderungen nötig.",
+      "changes": "Was geändert wurde",
+      "nextStep": "Nächster Schritt",
+      "confidence": {
+        "high": "Hohe Sicherheit",
+        "medium": "Mittlere Sicherheit",
+        "low": "Geringe Sicherheit"
+      },
+      "severity": {
+        "error": "Fehler",
+        "warning": "Warnung",
+        "info": "Tipp"
+      },
+      "category": {
+        "bug": "Bug",
+        "security": "Sicherheit",
+        "performance": "Leistung",
+        "readability": "Lesbarkeit",
+        "style": "Stil",
+        "best_practice": "Gute Praxis"
+      },
+      "editCode": "Code bearbeiten",
+      "newReview": "Neues Review"
+    }
+  },
   "codeBlock": {
     "plainLanguage": "Text",
     "copy": "Kopieren",

@@ -7,12 +7,27 @@ import { Divider, ListItem, SectionHeader } from '@/components/ui';
 
 export function QuickActions() {
   const { t } = useTranslation();
-  const openChat = () => router.navigate('/chat');
 
+  // "Ask" opens the chat; "explain" and "fix" open the code review flow with that action.
   const actions = [
-    { key: 'ask', icon: Lightbulb },
-    { key: 'explain', icon: Code },
-    { key: 'fix', icon: Bug },
+    {
+      key: 'ask',
+      icon: Lightbulb,
+      onPress: () => router.navigate('/chat'),
+      hint: t('tabs.a11yHint', { label: t('tabs.chat') }),
+    },
+    {
+      key: 'explain',
+      icon: Code,
+      onPress: () => router.push('/code-review?action=explain'),
+      hint: t('codeReview.openHint'),
+    },
+    {
+      key: 'fix',
+      icon: Bug,
+      onPress: () => router.push('/code-review?action=fix'),
+      hint: t('codeReview.openHint'),
+    },
   ] as const;
 
   return (
@@ -26,8 +41,8 @@ export function QuickActions() {
             icon={action.icon}
             title={t(`home.quickActions.${action.key}.title`)}
             subtitle={t(`home.quickActions.${action.key}.subtitle`)}
-            onPress={openChat}
-            accessibilityHint={t('tabs.a11yHint', { label: t('tabs.chat') })}
+            onPress={action.onPress}
+            accessibilityHint={action.hint}
           />
         </View>
       ))}

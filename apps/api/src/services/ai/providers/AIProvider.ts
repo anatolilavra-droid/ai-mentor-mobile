@@ -1,7 +1,5 @@
-import type { AIProviderName } from '@ai-mentor/shared';
+import type { AIProviderName, CodeLanguage, CodeReviewAction } from '@ai-mentor/shared';
 import { z } from 'zod';
-
-import type { CodeLanguage, CodeReviewTask } from '../../../schemas/code-review.schema.js';
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string };
 
@@ -18,7 +16,7 @@ export type CodeReviewInput = {
   /** The user's code, wrapped by the prompt. It is data only and never executed. */
   messages: ChatMessage[];
   language: CodeLanguage;
-  task: CodeReviewTask;
+  action: CodeReviewAction;
   /** JSON Schema of the expected output, for providers that can constrain their answer. */
   outputJsonSchema: unknown;
   maxOutputTokens: number;

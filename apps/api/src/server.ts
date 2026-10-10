@@ -29,6 +29,7 @@ const app = createApp({
   config: {
     version,
     aiTimeoutMs: env.AI_TIMEOUT_MS,
+    codeReviewAiTimeoutMs: env.CODE_REVIEW_AI_TIMEOUT_MS,
     requestTimeoutMs: env.REQUEST_TIMEOUT_MS,
     jsonBodyLimit: env.JSON_BODY_LIMIT,
     rateLimitIp: { max: env.RATE_LIMIT_IP_MAX, windowMs: env.RATE_LIMIT_IP_WINDOW_MS },

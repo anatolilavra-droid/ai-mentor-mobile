@@ -119,6 +119,7 @@ function RootNavigator() {
       <Stack.Protected guard={appUnlocked}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="profile-edit" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="code-review" />
       </Stack.Protected>
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="onboarding" />

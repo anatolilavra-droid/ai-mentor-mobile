@@ -5,3 +5,5 @@ export * from './onboarding.js';
 export * from './usage.js';
 export * from './errors.js';
 export * from './chat.js';
+export * from './codeReview.js';
+export * from './secrets.js';

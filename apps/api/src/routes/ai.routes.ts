@@ -1,8 +1,13 @@
 import { Router, type RequestHandler } from 'express';
 
-import { createChatHandler } from '../controllers/ai.controller.js';
+import { createChatHandler, createCodeReviewHandler } from '../controllers/ai.controller.js';
 import { defineRoute } from '../lib/defineRoute.js';
-import { chatRequestSchema, chatResponseSchema } from '@ai-mentor/shared';
+import {
+  chatRequestSchema,
+  chatResponseSchema,
+  codeReviewRequestSchema,
+  codeReviewResponseSchema,
+} from '@ai-mentor/shared';
 import { emptyQuerySchema } from '../schemas/common.schema.js';
 import type { AIService } from '../services/ai/ai.service.js';
 
@@ -21,6 +26,15 @@ export function aiRoutes(deps: {
     body: chatRequestSchema,
     response: chatResponseSchema,
     handler: createChatHandler(deps.aiService),
+  });
+  defineRoute(router, {
+    method: 'post',
+    path: '/api/ai/code-review',
+    middleware: [deps.auth, deps.aiUserLimiter],
+    query: emptyQuerySchema,
+    body: codeReviewRequestSchema,
+    response: codeReviewResponseSchema,
+    handler: createCodeReviewHandler(deps.aiService),
   });
   return router;
 }

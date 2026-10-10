@@ -3,19 +3,22 @@
  *
  * - Without AI_MODEL: lists the Gemini models this key can use, so the exact
  *   model id can be copied instead of guessed.
- * - With AI_MODEL: sends one fixed learning question and one tiny code review
- *   through the real adapter and prompts, and validates both answers.
+ * - With AI_MODEL: sends one fixed learning question and a small fixed code
+ *   sample for every code review action through the real adapter and prompts,
+ *   and validates every answer.
  *
  * Only fixed sample content is sent: no user data. The key is read from the
  * environment and never printed.
  */
 import { appendFileSync } from 'node:fs';
 
+import { CODE_REVIEW_ACTIONS, codeReviewRequestSchema, countCodeLines } from '@ai-mentor/shared';
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
 
 import { prompts } from '../src/prompts/registry.js';
 import type { LearnerContext } from '../src/prompts/types.js';
+import { finalizeReview } from '../src/services/ai/finalizeReview.js';
 import { generateTextResultSchema } from '../src/services/ai/providers/AIProvider.js';
 import { createGeminiProvider } from '../src/services/ai/providers/gemini.provider.js';
 
@@ -94,7 +97,7 @@ let failed = false;
 out(`## AI smoke test: \`${model}\``);
 out();
 
-/* 1. A fixed learning question through chat/v1. */
+/* 1. A fixed learning question through the current chat prompt. */
 try {
   const prompt = prompts.chat;
   const built = prompt.build(
@@ -127,37 +130,60 @@ try {
   out(describe(error));
 }
 
-/* 2. A tiny fixed code review through code-review/v1 with JSON output. */
-try {
-  const prompt = prompts.codeReview;
-  const built = prompt.build(
-    { language: 'javascript', task: 'fix', code: 'const total = 0;\ntotal = total + 1;' },
-    learner,
-  );
-  const startedAt = performance.now();
-  const raw = await provider.reviewCode({
-    ...built,
-    language: 'javascript',
-    task: 'fix',
-    outputJsonSchema: z.toJSONSchema(prompt.outputSchema),
-    maxOutputTokens: prompt.maxOutputTokens,
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  });
-  const review = prompt.outputSchema.parse(raw.output);
-  out(`### Code review (${prompt.ref}) ✅`);
-  out(
-    `${Math.round(performance.now() - startedAt)} ms, ` +
-      `${raw.usage.inputTokens} input / ${raw.usage.outputTokens} output tokens, ` +
-      `${review.issues.length} issue(s); the answer matches the review schema.`,
-  );
-  out();
-  out('```json');
-  out(JSON.stringify(review, null, 2));
-  out('```');
-} catch (error) {
-  failed = true;
-  out(`### Code review ❌`);
-  out(describe(error));
+/* 2. Every code review action on one small fixed sample, with JSON output. */
+const SAMPLE_CODE = [
+  'function average(numbers) {',
+  '  let total = 0;',
+  '  for (let i = 0; i <= numbers.length; i++) {',
+  '    total += numbers[i];',
+  '  }',
+  '  return total / numbers.length;',
+  '}',
+].join('\n');
+
+for (const action of CODE_REVIEW_ACTIONS) {
+  try {
+    const request = codeReviewRequestSchema.parse({
+      language: 'javascript',
+      action,
+      code: SAMPLE_CODE,
+    });
+    const prompt = prompts.codeReview;
+    const built = prompt.build(request, learner);
+    const startedAt = performance.now();
+    const raw = await provider.reviewCode({
+      ...built,
+      language: request.language,
+      action: request.action,
+      outputJsonSchema: z.toJSONSchema(prompt.outputSchema),
+      maxOutputTokens: prompt.maxOutputTokens,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    const review = finalizeReview(prompt.outputSchema.parse(raw.output), {
+      action,
+      lines: countCodeLines(request.code),
+    });
+    out(`### Code review: ${action} (${prompt.ref}) ✅`);
+    out(
+      `${Math.round(performance.now() - startedAt)} ms, ` +
+        `${raw.usage.inputTokens} input / ${raw.usage.outputTokens} output tokens, ` +
+        `${review.issues.length} issue(s), steps: ${review.steps?.length ?? 0}, ` +
+        `fixed code: ${review.fixedCode ? 'yes' : 'no'}, confidence: ${review.confidence}; ` +
+        'the answer matches the review schema.',
+    );
+    out();
+    out('<details><summary>Answer</summary>');
+    out();
+    out('```json');
+    out(JSON.stringify(review, null, 2));
+    out('```');
+    out('</details>');
+    out();
+  } catch (error) {
+    failed = true;
+    out(`### Code review: ${action} ❌`);
+    out(describe(error));
+  }
 }
 
 finish(failed ? 1 : 0);

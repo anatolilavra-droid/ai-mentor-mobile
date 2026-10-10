@@ -9,7 +9,7 @@ import {
   CHAT_MESSAGE_MAX_LENGTH,
 } from './constants.js';
 import { experienceLevelSchema, primaryGoalSchema, technologyIdSchema } from './profile.js';
-import { quotaSchema } from './usage.js';
+import { aiUsageSchema, type AIUsage } from './usage.js';
 
 /**
  * Optional hints for this answer only. They never affect plan, limits or
@@ -53,15 +53,9 @@ export const chatRequestSchema = z
   .strict();
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
 
-/** Token usage of this call and the monthly quota after it. */
-export const chatUsageSchema = z
-  .object({
-    inputTokens: z.number().int().nonnegative(),
-    outputTokens: z.number().int().nonnegative(),
-    quota: quotaSchema,
-  })
-  .strict();
-export type ChatUsage = z.infer<typeof chatUsageSchema>;
+/** Token usage of this call and the monthly chat quota after it. */
+export const chatUsageSchema = aiUsageSchema;
+export type ChatUsage = AIUsage;
 
 export const chatResponseSchema = z
   .object({
