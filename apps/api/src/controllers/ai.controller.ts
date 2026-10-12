@@ -6,7 +6,9 @@ import type {
   ChatRequest,
   ChatResponse,
   CodeReviewResponse,
+  LearningPlanResponse,
   ParsedCodeReviewRequest,
+  ParsedLearningPlanRequest,
 } from '@ai-mentor/shared';
 import type { AICall, AIService } from '../services/ai/ai.service.js';
 
@@ -36,6 +38,19 @@ export function createCodeReviewHandler(aiService: AIService) {
     body: ParsedCodeReviewRequest;
   }): Promise<CodeReviewResponse> => {
     const result = await aiService.reviewCode(toCall(req), body);
+    return { ...result, requestId: getRequestId(req) };
+  };
+}
+
+export function createLearningPlanHandler(aiService: AIService) {
+  return async ({
+    req,
+    body,
+  }: {
+    req: Request;
+    body: ParsedLearningPlanRequest;
+  }): Promise<LearningPlanResponse> => {
+    const result = await aiService.generateLearningPlan(toCall(req), body);
     return { ...result, requestId: getRequestId(req) };
   };
 }

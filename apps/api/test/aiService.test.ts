@@ -10,6 +10,7 @@ import { AppError } from '../src/errors/AppError.js';
 import { createAIService, type AICall } from '../src/services/ai/ai.service.js';
 import type { AIProvider } from '../src/services/ai/providers/AIProvider.js';
 import { createMockProvider } from '../src/services/ai/providers/mock.provider.js';
+import { createLearningPlanStore } from '../src/services/learningPlan/learningPlanStore.js';
 import { createProfileService } from '../src/services/profile.service.js';
 import { createSupabaseUsage } from '../src/services/usage/supabaseUsage.js';
 
@@ -31,8 +32,9 @@ function makeService(provider: AIProvider) {
     selectProvider: () => provider,
     usageGuard: createSupabaseUsage(supabase.factory).guard,
     profileService: createProfileService(supabase.factory),
-    aiTimeouts: { chat: 1_000, code_review: 1_000 },
+    aiTimeouts: { chat: 1_000, code_review: 1_000, learning_plan: 1_000 },
     historyLimits: CHAT_HISTORY_DEFAULTS,
+    learningPlanStore: createLearningPlanStore(supabase.factory),
   });
 }
 

@@ -1,4 +1,5 @@
-# Manual check of the deployed API from a phone: calls GET /health.
+# Manual check of the deployed API from a phone: calls GET /health, then checks that
+# POST /api/ai/learning-plan exists and refuses a request without a session (401).
 # The URL comes from the run input or the repository variable EXPO_PUBLIC_API_URL
 # (a public address, not a secret). A free Render service may need up to a minute
 # to wake up, so the request waits up to 90 seconds.
@@ -46,3 +47,17 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
           test "$status" = "200"
+
+      - name: Check that the learning plan route needs a session
+        run: |
+          url="${API_URL%/}/api/ai/learning-plan"
+          status=$(curl -sS -o plan.json -w '%{http_code}' --max-time 90 \
+            -X POST -H 'Content-Type: application/json' \
+            -d '{"technologyId":"javascript","goal":"learn_javascript","durationDays":7,"dailyMinutes":30}' \
+            "$url" || echo "000")
+          code=$(jq -r '.error.code // empty' plan.json 2>/dev/null || true)
+          {
+            echo ""
+            echo "- \`POST /api/ai/learning-plan\` without a token: HTTP **$status** \`$code\` (expected 401 UNAUTHORIZED)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          test "$status" = "401"

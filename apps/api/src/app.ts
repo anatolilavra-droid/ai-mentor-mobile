@@ -17,6 +17,7 @@ import { createAIService } from './services/ai/ai.service.js';
 import type { AIProvider } from './services/ai/providers/AIProvider.js';
 import { createMockProvider } from './services/ai/providers/mock.provider.js';
 import { createProviderSelector } from './services/ai/providers/selectProvider.js';
+import { createLearningPlanStore } from './services/learningPlan/learningPlanStore.js';
 import { createProfileService } from './services/profile.service.js';
 import { createSupabaseUsage } from './services/usage/supabaseUsage.js';
 import type { UsageGuard } from './services/usage/UsageGuard.js';
@@ -27,6 +28,8 @@ export type AppConfig = {
   aiTimeoutMs: number;
   /** AI timeout for code review answers. */
   codeReviewAiTimeoutMs: number;
+  /** AI timeout for learning plan generation (the largest answers). */
+  learningPlanAiTimeoutMs: number;
   requestTimeoutMs: number;
   jsonBodyLimit: string;
   rateLimitIp: { max: number; windowMs: number };
@@ -69,8 +72,13 @@ export function createApp(deps: AppDeps): Express {
     }),
     usageGuard: deps.usageGuard ?? usage.guard,
     profileService,
-    aiTimeouts: { chat: config.aiTimeoutMs, code_review: config.codeReviewAiTimeoutMs },
+    aiTimeouts: {
+      chat: config.aiTimeoutMs,
+      code_review: config.codeReviewAiTimeoutMs,
+      learning_plan: config.learningPlanAiTimeoutMs,
+    },
     historyLimits: config.historyLimits,
+    learningPlanStore: createLearningPlanStore(deps.createUserClient),
   });
   const auth = requireAuth(deps.tokenVerifier);
 

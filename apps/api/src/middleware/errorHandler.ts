@@ -29,6 +29,7 @@ export function sendError(res: Response, error: AppError, requestId: string): vo
       requestId,
       ...(error.details ? { details: error.details } : {}),
       ...(error.quota ? { quota: error.quota } : {}),
+      ...(error.planLimit ? { planLimit: error.planLimit } : {}),
     },
   };
   res.status(error.status).json(body);

@@ -5,6 +5,7 @@ import { AppState, Platform } from 'react-native';
 import { queryClient } from '@/lib/query/queryClient';
 import { supabase } from '@/lib/supabase/client';
 import { useCodeReviewStore } from '@/features/code-review/codeReview.store';
+import { clearPlanCaches } from '@/features/learning-plan/planCache';
 import { useOnboardingDraftStore } from '@/stores/onboardingDraft.store';
 
 export type AuthStatus = 'initializing' | 'signedOut' | 'signedIn';
@@ -59,6 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         useOnboardingDraftStore.getState().clearAll();
         // Pasted code may contain secrets: drop it with the session.
         useCodeReviewStore.getState().clear();
+        // The offline copy of learning plans belongs to this account only.
+        void clearPlanCaches();
       }
     });
 

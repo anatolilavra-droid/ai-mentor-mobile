@@ -4,16 +4,21 @@ import { z } from 'zod';
 import { AppError } from '../../errors/AppError.js';
 import { prompts } from '../../prompts/registry.js';
 import {
+  PLAN_RESPONSE_MAX_CHARS,
   countCodeLines,
   type ChatRequest,
   type ChatResponse,
   type CodeReviewResponse,
   type HistoryLimits,
+  type LearningPlanResponse,
   type ParsedCodeReviewRequest,
+  type ParsedLearningPlanRequest,
 } from '@ai-mentor/shared';
 import type { LearnerContext } from '../../prompts/types.js';
 import type { ProfileRow } from '../../schemas/me.schema.js';
 import type { ProfileService } from '../profile.service.js';
+import { finalizePlan } from '../learningPlan/finalizePlan.js';
+import type { LearningPlanStore } from '../learningPlan/learningPlanStore.js';
 import type { Quota, UsageFeature, UsageGuard } from '../usage/UsageGuard.js';
 
 import { toAppError } from './ai.errors.js';
@@ -22,6 +27,7 @@ import { finalizeReview, isFixedCodeCollapsed } from './finalizeReview.js';
 import {
   codeReviewResultSchema,
   generateTextResultSchema,
+  structuredResultSchema,
   type AIProvider,
 } from './providers/AIProvider.js';
 
@@ -37,11 +43,23 @@ type AIResultMeta = Pick<ChatResponse, 'provider' | 'promptVersion' | 'usage'>;
 
 export type ChatResult = AIResultMeta & Pick<ChatResponse, 'answer' | 'context'>;
 export type CodeReviewResultData = AIResultMeta & Pick<CodeReviewResponse, 'review' | 'input'>;
+export type LearningPlanResultData = Omit<LearningPlanResponse, 'requestId'>;
+
+/** Features with their own AI timeout. */
+export type AIFeature = UsageFeature | 'learning_plan';
 
 export type AIService = {
   chat(call: AICall, request: ChatRequest): Promise<ChatResult>;
   /** The request must already be parsed by codeReviewRequestSchema (normalized code). */
   reviewCode(call: AICall, request: ParsedCodeReviewRequest): Promise<CodeReviewResultData>;
+  /**
+   * Reserves a slot (limits), asks the AI, validates and saves the plan. The plan
+   * is saved and counted together, or not at all.
+   */
+  generateLearningPlan(
+    call: AICall,
+    request: ParsedLearningPlanRequest,
+  ): Promise<LearningPlanResultData>;
 };
 
 export type AIServiceDeps = {
@@ -50,9 +68,11 @@ export type AIServiceDeps = {
   usageGuard: UsageGuard;
   profileService: ProfileService;
   /** How long one AI call of each feature may take before it is aborted. */
-  aiTimeouts: Record<UsageFeature, number>;
+  aiTimeouts: Record<AIFeature, number>;
   /** How much conversation history a chat prompt may carry. */
   historyLimits: HistoryLimits;
+  /** Learning plan limits and storage (database functions, as the user). */
+  learningPlanStore: LearningPlanStore;
 };
 
 /**
@@ -61,7 +81,9 @@ export type AIServiceDeps = {
  */
 export function createAIService(deps: AIServiceDeps): AIService {
   const { selectProvider, usageGuard, profileService, aiTimeouts, historyLimits } = deps;
+  const { learningPlanStore } = deps;
   const codeReviewJsonSchema = z.toJSONSchema(prompts.codeReview.outputSchema);
+  const learningPlanJsonSchema = z.toJSONSchema(prompts.learningPlan.outputSchema);
 
   async function checkUsage(call: AICall, feature: UsageFeature): Promise<Quota> {
     const decision = await usageGuard.check({ ...call, feature });
@@ -119,6 +141,20 @@ export function createAIService(deps: AIServiceDeps): AIService {
     }
   }
 
+  /** Earlier progress with the technology; personalization only, so failures are ignored. */
+  async function optionalProgress(call: AICall, technologyId: string) {
+    try {
+      return await learningPlanStore.progressSummary(call, technologyId);
+    } catch (error) {
+      if (call.signal.aborted) throw error;
+      call.log.warn(
+        { code: error instanceof AppError ? error.code : 'UNKNOWN' },
+        'progress unavailable',
+      );
+      return { previousPlans: 0, completedTasks: 0, completedModules: [] };
+    }
+  }
+
   async function loadLearnerData(call: AICall) {
     const [profile, technologies] = await Promise.all([
       optional<ProfileRow | null>(call, 'profile', () => profileService.getOwnProfile(call), null),
@@ -139,7 +175,7 @@ export function createAIService(deps: AIServiceDeps): AIService {
    */
   async function callProvider<T>(
     call: AICall,
-    feature: UsageFeature,
+    feature: AIFeature,
     provider: AIProvider,
     promptRef: string,
     run: (signal: AbortSignal) => Promise<T>,
@@ -281,6 +317,111 @@ export function createAIService(deps: AIServiceDeps): AIService {
         promptVersion: prompt.ref,
         usage: { ...result.data.usage, quota: quotaAfter },
       };
+    },
+
+    async generateLearningPlan(call, request) {
+      // Enums, numbers and lengths only: never the goal details or the plan text.
+      call.log.info(
+        {
+          learningPlan: {
+            technologyId: request.technologyId,
+            goal: request.goal,
+            durationDays: request.durationDays,
+            dailyMinutes: request.dailyMinutes,
+            goalDetailsChars: request.goalDetails?.length ?? 0,
+          },
+        },
+        'learning plan requested',
+      );
+
+      const provider = selectProvider(call.userId);
+      const { profile, technologies } = await loadLearnerData(call);
+      const learner = buildChatContext({ profile, technologies, limits: historyLimits }).learner;
+      const progress = await optionalProgress(call, request.technologyId);
+
+      // Limits are checked and a slot reserved before any AI call.
+      const { generationId, limits } = await learningPlanStore.begin(call, request);
+      call.log.info({ learningPlan: { generationId, limits } }, 'learning plan slot reserved');
+
+      const prompt = prompts.learningPlan;
+      const startedAt = performance.now();
+      let planId: string;
+      let usage: { inputTokens: number; outputTokens: number };
+      let model: string;
+      try {
+        const { system, messages } = prompt.build(
+          {
+            technologyId: request.technologyId,
+            goal: request.goal,
+            goalDetails: request.goalDetails,
+            durationDays: request.durationDays,
+            dailyMinutes: request.dailyMinutes,
+            progress,
+          },
+          learner,
+        );
+        const raw = await callProvider(call, 'learning_plan', provider, prompt.ref, (signal) =>
+          provider.generateStructured({
+            task: 'learning_plan',
+            system,
+            messages,
+            outputJsonSchema: learningPlanJsonSchema,
+            maxOutputTokens: prompt.maxOutputTokens,
+            maxResponseChars: PLAN_RESPONSE_MAX_CHARS,
+            signal,
+            hints: {
+              technologyId: request.technologyId,
+              durationDays: request.durationDays,
+              dailyMinutes: request.dailyMinutes,
+            },
+          }),
+        );
+        const result = structuredResultSchema.safeParse(raw);
+        if (!result.success) throw new AppError('AI_INVALID_RESPONSE', { cause: result.error });
+        const output = prompt.outputSchema.safeParse(result.data.output);
+        if (!output.success) throw new AppError('AI_INVALID_RESPONSE', { cause: output.error });
+        const finalized = finalizePlan(output.data, request);
+        if (!finalized) throw new AppError('AI_INVALID_RESPONSE');
+
+        const latencyMs = Math.round(performance.now() - startedAt);
+        call.log.info(
+          { learningPlan: { ...finalized.stats, responseChars: result.data.responseChars } },
+          'learning plan validated',
+        );
+        if (finalized.stats.overBudgetDays > 0 || finalized.stats.emptyDays > 0) {
+          call.log.warn({ learningPlan: finalized.stats }, 'learning plan does not fit the days');
+        }
+
+        model = result.data.model;
+        usage = result.data.usage;
+        planId = await learningPlanStore.complete(call, {
+          generationId,
+          experienceLevel: learner.level ?? 'beginner',
+          goalDetails: request.goalDetails,
+          draft: finalized.draft,
+          meta: {
+            provider: provider.name,
+            model,
+            promptVersion: prompt.ref,
+            ...usage,
+            latencyMs,
+          },
+        });
+      } catch (error) {
+        // Not saved: release the reservation so the slot and the generation are free again.
+        const code = error instanceof AppError ? error.code : 'INTERNAL_ERROR';
+        const released = await learningPlanStore.release(call.accessToken, generationId, code);
+        call.log.warn(
+          { learningPlan: { generationId, released }, code },
+          'learning plan not saved',
+        );
+        throw error;
+      }
+
+      logSuccess(call, provider, prompt.ref, model, usage, startedAt);
+      // Saved and counted. Reading it back is a plain RLS select.
+      const plan = await learningPlanStore.fetchPlan(call, planId);
+      return { plan, limits, provider: provider.name, promptVersion: prompt.ref, usage };
     },
   };
 }

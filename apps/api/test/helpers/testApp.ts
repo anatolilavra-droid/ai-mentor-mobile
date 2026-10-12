@@ -13,6 +13,7 @@ export const testConfig: AppConfig = {
   version: '0.0.0-test',
   aiTimeoutMs: 2_000,
   codeReviewAiTimeoutMs: 2_000,
+  learningPlanAiTimeoutMs: 2_000,
   requestTimeoutMs: 3_000,
   jsonBodyLimit: '64kb',
   rateLimitIp: { max: 1_000, windowMs: 60_000 },

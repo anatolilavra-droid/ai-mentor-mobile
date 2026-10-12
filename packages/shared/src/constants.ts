@@ -95,3 +95,27 @@ export type ReviewConfidence = (typeof REVIEW_CONFIDENCE)[number];
 /** AI providers the API may report in a response. */
 export const AI_PROVIDERS = ['mock', 'gemini'] as const;
 export type AIProviderName = (typeof AI_PROVIDERS)[number];
+
+/** Learning plans (learning_plans / learning_modules / learning_tasks tables). */
+export const PLAN_DURATION_DAYS = [7, 14, 28] as const;
+export type PlanDurationDays = (typeof PLAN_DURATION_DAYS)[number];
+export const PLAN_STATUSES = ['active', 'archived'] as const;
+export type PlanStatus = (typeof PLAN_STATUSES)[number];
+export const PLAN_TASK_KINDS = ['learn', 'practice', 'exercise', 'mini_project', 'review'] as const;
+export type PlanTaskKind = (typeof PLAN_TASK_KINDS)[number];
+export const PLAN_MAX_MODULES = 8;
+export const PLAN_MAX_TASKS = 56;
+export const PLAN_MAX_TASKS_PER_DAY = 3;
+export const PLAN_MAX_OBJECTIVES = 5;
+export const PLAN_MAX_REVIEW_QUESTIONS = 8;
+export const PLAN_TITLE_MAX = 120;
+export const PLAN_SUMMARY_MAX = 1_000;
+export const PLAN_NEXT_STEP_MAX = 500;
+export const PLAN_REVIEW_QUESTION_MAX = 300;
+export const MODULE_TITLE_MAX = 120;
+export const MODULE_DESCRIPTION_MAX = 1_000;
+export const MODULE_OBJECTIVE_MAX = 200;
+export const TASK_TITLE_MAX = 160;
+export const TASK_DESCRIPTION_MAX = 1_500;
+/** Largest raw AI answer accepted for a plan, before JSON parsing. */
+export const PLAN_RESPONSE_MAX_CHARS = 60_000;

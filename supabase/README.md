@@ -59,6 +59,7 @@ Each file should end with `Success`.
 | `20261012000100_technologies.sql`               | Phase 3: `technologies` catalog (seeded), `user_technologies` (1–8 per user, unique), RLS                                       |
 | `20261012000200_onboarding_functions.sql`       | Phase 3: `complete_onboarding`, `save_personalization`, `skip_onboarding` (one transaction each)                                |
 | `20261020000000_ai_usage.sql`                   | Phase 5a: `plan_limits`, `subscriptions`, `usage_counters`, `get_my_ai_quotas`, `record_my_ai_usage`; monthly AI limits, RLS    |
+| `20261101000000_learning_plans.sql`             | Phase 7a: learning plans, modules, tasks, generations, plan limits, RLS and the plan functions                                  |
 
 If you signed up in the app before applying the first migration, the second one
 creates your missing profile. Without it the app shows "Your profile could not load".
@@ -92,6 +93,19 @@ After the Phase 5a migration, run `tests/rls_usage.sql`.
 Expected result: no error (the editor may show only `Success. No rows returned`,
 because the script ends with a rollback).
 
+After the Phase 7a migration, run `tests/rls_learning_plans.sql`.
+Expected result: `RLS learning plans: all checks passed` (or no error). It checks
+privileges, anonymous access, a missing session, Free and Pro limits, parallel
+reservations, failed and expired generations, own data and refusals for another
+user's plans, tasks and generations. Then run the blocks of
+`tests/verify_learning_plans.sql` one at a time: read-only listings of the tables,
+indexes, policies, grants and functions with the expected result above each block.
+
+The same migrations and test scripts also run on every push that touches
+`supabase/` in GitHub Actions (**Database checks**) on a plain Postgres with
+`tests/ci/bootstrap_supabase.sql` as a stand-in for Supabase. That file is for CI
+only: never run it in the real project.
+
 ## 6. Plans and AI limits
 
 Monthly limits live in `plan_limits` and can be changed without an app release:
@@ -109,6 +123,13 @@ on conflict (user_id) do update set plan = 'pro', status = 'active';
 ```
 
 Back to Free: `update public.subscriptions set status = 'canceled' where user_id = '<user id>';`
+
+Learning plan limits (active plans at once, plan generations per month) live in
+`learning_plan_limits`, separate from the monthly AI limits:
+
+```sql
+update public.learning_plan_limits set monthly_generations = 5 where plan = 'free';
+```
 
 Quick check without the full test:
 

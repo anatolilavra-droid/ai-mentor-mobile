@@ -20,7 +20,8 @@ describe('parseEnv', () => {
       AI_PROVIDER: 'mock',
       AI_TIMEOUT_MS: 30_000,
       CODE_REVIEW_AI_TIMEOUT_MS: 50_000,
-      REQUEST_TIMEOUT_MS: 60_000,
+      LEARNING_PLAN_AI_TIMEOUT_MS: 90_000,
+      REQUEST_TIMEOUT_MS: 100_000,
       TRUST_PROXY: 0,
     });
   });
@@ -34,7 +35,7 @@ describe('parseEnv', () => {
 
   it('requires the request timeout to be longer than every AI timeout', () => {
     const problem =
-      'REQUEST_TIMEOUT_MS: must be greater than AI_TIMEOUT_MS and CODE_REVIEW_AI_TIMEOUT_MS';
+      'REQUEST_TIMEOUT_MS: must be greater than AI_TIMEOUT_MS, CODE_REVIEW_AI_TIMEOUT_MS and LEARNING_PLAN_AI_TIMEOUT_MS';
     expect(parseEnv({ ...valid, AI_TIMEOUT_MS: '30000', REQUEST_TIMEOUT_MS: '30000' })).toEqual({
       ok: false,
       problems: [problem],
@@ -43,7 +44,20 @@ describe('parseEnv', () => {
       parseEnv({ ...valid, CODE_REVIEW_AI_TIMEOUT_MS: '60000', REQUEST_TIMEOUT_MS: '60000' }),
     ).toEqual({ ok: false, problems: [problem] });
     expect(
-      parseEnv({ ...valid, CODE_REVIEW_AI_TIMEOUT_MS: '50000', REQUEST_TIMEOUT_MS: '50001' }).ok,
+      parseEnv({ ...valid, LEARNING_PLAN_AI_TIMEOUT_MS: '90000', REQUEST_TIMEOUT_MS: '90000' }),
+    ).toEqual({ ok: false, problems: [problem] });
+    // The Phase 6 Render value (60 s) is too short once learning plans need 90 s.
+    expect(parseEnv({ ...valid, REQUEST_TIMEOUT_MS: '60000' })).toEqual({
+      ok: false,
+      problems: [problem],
+    });
+    expect(
+      parseEnv({
+        ...valid,
+        CODE_REVIEW_AI_TIMEOUT_MS: '50000',
+        LEARNING_PLAN_AI_TIMEOUT_MS: '50000',
+        REQUEST_TIMEOUT_MS: '50001',
+      }).ok,
     ).toBe(true);
   });
 

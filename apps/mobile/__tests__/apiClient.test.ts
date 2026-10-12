@@ -1,4 +1,4 @@
-import { createApiClient } from '@/lib/api/client';
+import { LEARNING_PLAN_TIMEOUT_MS, createApiClient } from '@/lib/api/client';
 import { ApiError, apiErrorMessageKey, isRetryable } from '@/lib/api/errors';
 
 const chatResponse = {
@@ -115,6 +115,69 @@ describe('API client', () => {
         })) as unknown as typeof fetch,
     });
     await expectCode(slow.chat({ message: 'Hi' }), 'CLIENT_TIMEOUT');
+  });
+
+  it('gives a learning plan its own longer timeout and reads which limit was reached', async () => {
+    jest.useFakeTimers();
+    try {
+      const fetchImpl = jest.fn(
+        (_url: string, init: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+          }),
+      );
+      const client = createApiClient({
+        baseUrl: 'https://api.test',
+        getAccessToken: async () => 'token',
+        timeoutMs: 1_000,
+        createRequestId: () => 'id',
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      });
+      const body = {
+        technologyId: 'javascript',
+        goal: 'learn_javascript',
+        durationDays: 7,
+        dailyMinutes: 30,
+      } as const;
+      const pending = client.learningPlan(body);
+      const settled = jest.fn();
+      pending.catch(settled);
+      await jest.advanceTimersByTimeAsync(LEARNING_PLAN_TIMEOUT_MS - 1);
+      expect(settled).not.toHaveBeenCalled();
+      await jest.advanceTimersByTimeAsync(1);
+      await expectCode(pending, 'CLIENT_TIMEOUT');
+      expect(fetchImpl).toHaveBeenCalledWith(
+        'https://api.test/api/ai/learning-plan',
+        expect.objectContaining({ method: 'POST', body: JSON.stringify(body) }),
+      );
+    } finally {
+      jest.useRealTimers();
+    }
+
+    const limited = setup([
+      json(409, {
+        error: {
+          code: 'PLAN_LIMIT_REACHED',
+          message: 'm',
+          requestId: 'r',
+          planLimit: { kind: 'active_plans', used: 1, limit: 1 },
+        },
+      }),
+    ]);
+    const error = await limited.client
+      .learningPlan({
+        technologyId: 'javascript',
+        goal: 'learn_javascript',
+        durationDays: 7,
+        dailyMinutes: 30,
+      })
+      .catch((caught: unknown) => caught);
+    expect(error).toMatchObject({
+      code: 'PLAN_LIMIT_REACHED',
+      planLimit: { kind: 'active_plans', used: 1, limit: 1 },
+    });
+    expect(isRetryable(error)).toBe(false);
+    expect(isRetryable(new ApiError('GENERATION_LIMIT_REACHED'))).toBe(false);
   });
 
   it('does not call the network without a URL or a session', async () => {

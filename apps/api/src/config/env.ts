@@ -40,8 +40,10 @@ const envSchema = z
     AI_TIMEOUT_MS: intFromEnv(1, 120_000).default(30_000),
     /** Code review answers are longer (structured JSON with fixed code). */
     CODE_REVIEW_AI_TIMEOUT_MS: intFromEnv(1, 120_000).default(50_000),
+    /** Learning plans: the largest structured answers (up to 28 days of tasks). */
+    LEARNING_PLAN_AI_TIMEOUT_MS: intFromEnv(1, 150_000).default(90_000),
     /** Whole request; must outlast every AI timeout so the typed error can still be sent. */
-    REQUEST_TIMEOUT_MS: intFromEnv(1, 180_000).default(60_000),
+    REQUEST_TIMEOUT_MS: intFromEnv(1, 180_000).default(100_000),
 
     /** Fits a 10 000-character message plus the largest allowed history. */
     JSON_BODY_LIMIT: z
@@ -60,11 +62,15 @@ const envSchema = z
     TRUST_PROXY: intFromEnv(0, 10).default(0),
   })
   .superRefine((env, ctx) => {
-    if (env.REQUEST_TIMEOUT_MS <= Math.max(env.AI_TIMEOUT_MS, env.CODE_REVIEW_AI_TIMEOUT_MS)) {
+    if (
+      env.REQUEST_TIMEOUT_MS <=
+      Math.max(env.AI_TIMEOUT_MS, env.CODE_REVIEW_AI_TIMEOUT_MS, env.LEARNING_PLAN_AI_TIMEOUT_MS)
+    ) {
       ctx.addIssue({
         code: 'custom',
         path: ['REQUEST_TIMEOUT_MS'],
-        message: 'must be greater than AI_TIMEOUT_MS and CODE_REVIEW_AI_TIMEOUT_MS',
+        message:
+          'must be greater than AI_TIMEOUT_MS, CODE_REVIEW_AI_TIMEOUT_MS and LEARNING_PLAN_AI_TIMEOUT_MS',
       });
     }
     if (env.AI_PROVIDER === 'gemini') {

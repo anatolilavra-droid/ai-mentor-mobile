@@ -4,8 +4,10 @@ import type {
   AIProvider,
   CodeReviewInput,
   CodeReviewResult,
+  GenerateStructuredInput,
   GenerateTextInput,
   GenerateTextResult,
+  StructuredResult,
 } from './AIProvider.js';
 
 const MOCK_MODEL = 'mock-mentor-1';
@@ -62,6 +64,54 @@ function mockReview(input: CodeReviewInput) {
     ...base,
     fixedCode: comment ? `${comment(DEMO_NOTE)}\n${code}` : code,
     changes: [comment ? 'Added a demo comment at the top.' : 'No changes in the demo.'],
+  };
+}
+
+const MOCK_MODULES: Record<number, number> = { 7: 2, 14: 3, 28: 4 };
+const MOCK_KINDS = ['learn', 'practice', 'exercise'] as const;
+
+/**
+ * A deterministic demo plan: one task a day, modules of equal length, a review on
+ * each module's last day and a mini project on the last day. Built from enums and
+ * numbers only, so it never echoes the learner's free text.
+ */
+function mockLearningPlan({
+  technologyId,
+  durationDays,
+  dailyMinutes,
+}: GenerateStructuredInput['hints']) {
+  const moduleCount = MOCK_MODULES[durationDays] ?? Math.max(1, Math.round(durationDays / 7));
+  const daysPerModule = Math.ceil(durationDays / moduleCount);
+  const minutes = Math.max(1, Math.min(dailyMinutes, 30));
+  const modules = Array.from({ length: moduleCount }, (_, index) => ({
+    title: `Demo module ${index + 1}`,
+    description: `Sample module about ${technologyId}. A real plan describes what you learn here.`,
+    objectives: [`Practise ${technologyId} step ${index + 1}`],
+  }));
+  const tasks = Array.from({ length: durationDays }, (_, index) => {
+    const day = index + 1;
+    const module = Math.min(moduleCount, Math.ceil(day / daysPerModule));
+    const lastOfModule = day === durationDays || day % daysPerModule === 0;
+    const kind =
+      day === durationDays ? 'mini_project' : lastOfModule ? 'review' : MOCK_KINDS[index % 3]!;
+    return {
+      module,
+      day,
+      kind,
+      title: `Day ${day}: demo ${kind.replace('_', ' ')}`,
+      description:
+        'This is a sample task (no real AI was called). A real plan says exactly what to do.',
+      estimatedMinutes: minutes,
+    };
+  });
+  return {
+    title: `Demo ${technologyId} plan (${durationDays} days)`,
+    summary: 'A demo plan from the mock mentor: real plans are written for your goal and level.',
+    modules,
+    tasks,
+    reviewQuestions: ['What did you learn this week?'],
+    nextStep: 'Open day 1 and start with the first task.',
+    confidence: 'low',
   };
 }
 
@@ -130,6 +180,23 @@ export function createMockProvider(options: { delayMs?: number } = {}): AIProvid
             input.messages.reduce((sum, message) => sum + estimateTokens(message.content), 0),
           outputTokens: estimateTokens(JSON.stringify(output)),
         },
+      };
+    },
+
+    async generateStructured(input: GenerateStructuredInput): Promise<StructuredResult> {
+      if (delayMs > 0) await sleep(delayMs, input.signal);
+      const output = mockLearningPlan(input.hints);
+      const raw = JSON.stringify(output);
+      return {
+        output,
+        model: MOCK_MODEL,
+        usage: {
+          inputTokens:
+            estimateTokens(input.system) +
+            input.messages.reduce((sum, message) => sum + estimateTokens(message.content), 0),
+          outputTokens: estimateTokens(raw),
+        },
+        responseChars: raw.length,
       };
     },
   };

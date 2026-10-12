@@ -13,6 +13,10 @@ export const ERROR_CODES = [
   'UNSUPPORTED_MEDIA_TYPE',
   'RATE_LIMITED',
   'USAGE_LIMIT_REACHED',
+  /** Learning plans: no free slot for another active plan (archive or delete one). */
+  'PLAN_LIMIT_REACHED',
+  /** Learning plans: this month's plan generations are used up. */
+  'GENERATION_LIMIT_REACHED',
   'INTERNAL_ERROR',
   'AI_PROVIDER_ERROR',
   'AI_INVALID_RESPONSE',
@@ -33,6 +37,18 @@ export const quotaDetailSchema = z
   .strict();
 export type QuotaDetail = z.infer<typeof quotaDetailSchema>;
 
+/** Which learning plan limit stopped the request. */
+export const planLimitDetailSchema = z
+  .object({
+    kind: z.enum(['active_plans', 'monthly_generations']),
+    used: z.number().int().nonnegative(),
+    limit: z.number().int().nonnegative(),
+    /** Monthly generations only: when the counter starts again (UTC). */
+    resetsAt: z.string().optional(),
+  })
+  .strict();
+export type PlanLimitDetail = z.infer<typeof planLimitDetailSchema>;
+
 export const errorDetailSchema = z.object({ path: z.string(), message: z.string() });
 export type ErrorDetail = z.infer<typeof errorDetailSchema>;
 
@@ -46,6 +62,7 @@ export const errorResponseSchema = z
         requestId: z.string(),
         details: z.array(errorDetailSchema).optional(),
         quota: quotaDetailSchema.optional(),
+        planLimit: planLimitDetailSchema.optional(),
       })
       .strict(),
   })

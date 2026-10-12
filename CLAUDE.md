@@ -747,7 +747,62 @@ the deploy and the on-device check.
   Phase 6 on-device checklist and the open Phase 5b checks (limit screen,
   wake-up after sleep).
 
-Next phase: not defined yet — wait for Anatoliy's instructions.
+Phase 7: Learning Plans — split into 7a (database, API, smoke tests) and 7b
+(mobile screens and APK). 7b starts only after Anatoliy's separate approval.
+
+Phase 7a: database, API and smoke tests — implemented, waiting for Anatoliy's
+review, the migration in the Supabase SQL Editor and the deploy.
+- Hybrid access. The API only generates: POST /api/ai/learning-plan (auth →
+  aiUserLimiter → Zod → begin_learning_plan_generation → AI provider/mock → Zod →
+  finalizePlan → complete_learning_plan_generation; any failure →
+  fail_learning_plan_generation). Reading plans, modules and tasks, ticking and
+  unticking tasks, archiving and deleting go from the app straight to Supabase
+  with the user's session and RLS. The user always comes from the verified JWT /
+  auth.uid(), never from a request body.
+- Migration 20261101000000_learning_plans.sql: learning_plan_limits (Free 1 active
+  plan + 3 generations a month, Pro 20 + 30; placeholders), learning_plans,
+  learning_modules, learning_tasks (user_id on every row, composite foreign keys),
+  learning_plan_generations (reservations and usage metadata, never free text).
+  Kept apart from plan_limits / usage_counters, so get_my_ai_quotas() and
+  /api/usage are unchanged (older APKs keep working).
+- RLS on all five tables; clients have no INSERT anywhere, UPDATE only on
+  learning_tasks.completed_at (own task, active plan; the database sets the time)
+  and learning_plans.status (own plan, active → archived only), DELETE only on
+  their own plans. Learner functions (get_my_learning_plan_limits,
+  set_learning_task_completed, archive_learning_plan, delete_learning_plan) are
+  security invoker. Only begin/complete/fail_learning_plan_generation are
+  security definer (clients must not write plans or reservations, so limits cannot
+  be bypassed); all have an empty search_path, schema-qualified names, auth.uid()
+  only, EXECUTE for authenticated only.
+- Limits are atomic: a per-user advisory lock and a pending reservation (counts as
+  an active plan and a generation, expires after 3 minutes). Typed errors
+  PLAN_LIMIT_REACHED (409) and GENERATION_LIMIT_REACHED (429) with planLimit.
+  A plan is saved and counted in one transaction, or not at all; no partial plans.
+- Durations 7, 14 and 28 days only (PLAN_DURATION_DAYS). Prompt learning-plan/v1:
+  flat JSON (modules + daily tasks), at most 8 modules and 56 tasks, length
+  limits per field, 60 000 characters per raw answer; goal details and earlier
+  progress only as delimited data. LEARNING_PLAN_AI_TIMEOUT_MS=90000,
+  REQUEST_TIMEOUT_MS=100000 (render.yaml), app timeout 120 s for this call.
+- The primary plan (Home) is the oldest active plan (created_at, then id):
+  selectPrimaryPlan in @ai-mentor/shared. Progress: computePlanProgress (every
+  task weighs the same).
+- App data layer only (no screens yet): features/learning-plan (service, hooks,
+  offline cache). The cache is read-only (last list and opened plans in
+  AsyncStorage, without goal_details, cleared on sign out); changes are online
+  only and not optimistic. Refresh on foreground, Retry and a 30-second retry
+  only while cached data is shown. NetInfo is a separate, deferred decision.
+- Checks: supabase/tests/rls_learning_plans.sql and verify_learning_plans.sql
+  (SQL Editor), GitHub "Database checks" (migrations + all SQL tests on Postgres
+  17 with tests/ci/bootstrap_supabase.sql, CI only), the "AI smoke test" with
+  suite learning_plan (7/14/28 days, sizes, tokens, timeout, saved through the
+  real migrations), and "API live check" (POST /api/ai/learning-plan → 401).
+- Rollout after Anatoliy's push: migration + rls_learning_plans.sql in the SQL
+  Editor → check REQUEST_TIMEOUT_MS=100000 and LEARNING_PLAN_AI_TIMEOUT_MS=90000
+  on Render → Manual Deploy → API live check → AI smoke test (gemini-3.7-flash,
+  suite learning_plan). If 28 days do not fit the timeout or are unstable: stop
+  and decide separately (no automatic async generation, no partial plans).
+
+Next phase: 7b (mobile screens and APK) — only after Anatoliy's approval.
 
 Phase 3 scope (for reference):
 

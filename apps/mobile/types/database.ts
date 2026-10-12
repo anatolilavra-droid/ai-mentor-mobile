@@ -5,6 +5,10 @@
  */
 import type {
   ExperienceLevel,
+  LearningModuleRow,
+  LearningPlanLimitsRow,
+  LearningPlanRow,
+  LearningTaskRow,
   PrimaryGoal,
   TechnologyCategory,
   UiLanguage,
@@ -47,6 +51,11 @@ export type UserTechnologyRow = {
   created_at: string;
 };
 
+/** Learning plans (Phase 7a). Rows are written only by the database functions. */
+export type LearningPlanTableRow = LearningPlanRow & { user_id: string };
+export type LearningModuleTableRow = LearningModuleRow & { user_id: string };
+export type LearningTaskTableRow = LearningTaskRow & { user_id: string };
+
 export type Database = {
   public: {
     Tables: {
@@ -67,6 +76,49 @@ export type Database = {
         Insert: never;
         Update: never;
         Relationships: [];
+      };
+      learning_plans: {
+        Row: LearningPlanTableRow;
+        Insert: never;
+        /** Only active → archived, through RLS; the app uses archive_learning_plan. */
+        Update: { status?: 'archived' };
+        Relationships: [];
+      };
+      learning_modules: {
+        Row: LearningModuleTableRow;
+        Insert: never;
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: 'learning_modules_plan_fkey';
+            columns: ['plan_id', 'user_id'];
+            isOneToOne: false;
+            referencedRelation: 'learning_plans';
+            referencedColumns: ['id', 'user_id'];
+          },
+        ];
+      };
+      learning_tasks: {
+        Row: LearningTaskTableRow;
+        Insert: never;
+        /** Only completed_at (the database sets the time); the app uses set_learning_task_completed. */
+        Update: { completed_at?: string | null };
+        Relationships: [
+          {
+            foreignKeyName: 'learning_tasks_plan_fkey';
+            columns: ['plan_id', 'user_id'];
+            isOneToOne: false;
+            referencedRelation: 'learning_plans';
+            referencedColumns: ['id', 'user_id'];
+          },
+          {
+            foreignKeyName: 'learning_tasks_module_fkey';
+            columns: ['module_id', 'plan_id', 'user_id'];
+            isOneToOne: false;
+            referencedRelation: 'learning_modules';
+            referencedColumns: ['id', 'plan_id', 'user_id'];
+          },
+        ];
       };
     };
     Views: Record<never, never>;
@@ -95,6 +147,28 @@ export type Database = {
       skip_onboarding: {
         Args: Record<string, never>;
         Returns: undefined;
+      };
+      get_my_learning_plan_limits: {
+        Args: Record<string, never>;
+        Returns: LearningPlanLimitsRow[];
+      };
+      set_learning_task_completed: {
+        Args: { p_task_id: string; p_completed: boolean };
+        Returns: {
+          task_id: string;
+          plan_id: string;
+          completed_at: string | null;
+          done: number;
+          total: number;
+        }[];
+      };
+      archive_learning_plan: {
+        Args: { p_plan_id: string };
+        Returns: { plan_id: string; status: 'archived'; archived_at: string }[];
+      };
+      delete_learning_plan: {
+        Args: { p_plan_id: string };
+        Returns: boolean;
       };
     };
     Enums: Record<never, never>;

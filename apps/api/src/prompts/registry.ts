@@ -1,5 +1,6 @@
 import { chatV2 } from './chat/v2.js';
 import { codeReviewV3 } from './code-review/v3.js';
+import { learningPlanV1 } from './learning-plan/v1.js';
 
 /**
  * The prompt version each feature uses. Switching a feature to a new version
@@ -8,4 +9,5 @@ import { codeReviewV3 } from './code-review/v3.js';
 export const prompts = {
   chat: chatV2,
   codeReview: codeReviewV3,
+  learningPlan: learningPlanV1,
 } as const;

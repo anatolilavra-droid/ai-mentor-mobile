@@ -1,4 +1,8 @@
-import { CHAT_HISTORY_DEFAULTS, codeReviewOutputSchema } from '@ai-mentor/shared';
+import {
+  CHAT_HISTORY_DEFAULTS,
+  codeReviewOutputSchema,
+  learningPlanOutputSchema,
+} from '@ai-mentor/shared';
 import { ApiError, FinishReason, type GenerateContentParameters } from '@google/genai';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
@@ -15,6 +19,7 @@ import {
   toGeminiSchema,
   type GeminiModels,
 } from '../src/services/ai/providers/gemini.provider.js';
+import { createLearningPlanStore } from '../src/services/learningPlan/learningPlanStore.js';
 import { createProfileService } from '../src/services/profile.service.js';
 import { createSupabaseUsage } from '../src/services/usage/supabaseUsage.js';
 
@@ -49,6 +54,17 @@ const textInput = (signal = new AbortController().signal) => ({
   messages: [{ role: 'user' as const, content: '<learner_message>\nHi\n</learner_message>' }],
   maxOutputTokens: 1_500,
   signal,
+});
+
+const structuredInput = () => ({
+  task: 'learning_plan' as const,
+  system: 'Write a plan.',
+  messages: [{ role: 'user' as const, content: 'Write my learning plan now.' }],
+  outputJsonSchema: { type: 'object' },
+  maxOutputTokens: 8_000,
+  maxResponseChars: 60_000,
+  signal: new AbortController().signal,
+  hints: { technologyId: 'javascript', durationDays: 7, dailyMinutes: 30 },
 });
 
 const provider = (respond: Parameters<typeof fakeModels>[0]) => {
@@ -226,6 +242,32 @@ describe('Gemini provider', () => {
     );
   });
 
+  it('reads a structured plan and reports its size', async () => {
+    const plan = { title: 'Plan', tasks: [] };
+    const { gemini, requests } = provider(async () => ok(JSON.stringify(plan)));
+    const result = await gemini.generateStructured({
+      ...structuredInput(),
+    });
+    expect(result.output).toEqual(plan);
+    expect(result.responseChars).toBe(JSON.stringify(plan).length);
+    expect(requests[0]?.config).toMatchObject({ responseMimeType: 'application/json' });
+    expect(requests[0]?.config?.maxOutputTokens).toBeGreaterThan(8_000);
+  });
+
+  it('rejects a structured answer that is too large, cut off or not JSON', async () => {
+    const big = provider(async () => ok(JSON.stringify({ text: 'x'.repeat(200) })));
+    await expectKind(
+      big.gemini.generateStructured({ ...structuredInput(), maxResponseChars: 100 }),
+      'invalid_response',
+    );
+    const cut = provider(async () =>
+      ok('{"title":', { candidates: [{ finishReason: FinishReason.MAX_TOKENS }] }),
+    );
+    await expectKind(cut.gemini.generateStructured(structuredInput()), 'invalid_response');
+    const prose = provider(async () => ok('Here is your plan!'));
+    await expectKind(prose.gemini.generateStructured(structuredInput()), 'invalid_response');
+  });
+
   it('is built by the factory without any network call', () => {
     const gemini = createAIProvider({
       provider: 'gemini',
@@ -369,6 +411,26 @@ describe('Gemini structured output schema', () => {
     });
   });
 
+  it('keeps the learning plan schema shallow and free of rejected keywords', () => {
+    const reduced = toGeminiSchema(z.toJSONSchema(learningPlanOutputSchema)) as {
+      properties: Record<string, { items?: { properties?: Record<string, { type: string }> } }>;
+    };
+    expect(keysDeep(reduced).filter((key) => FORBIDDEN.includes(key))).toEqual([]);
+    // Root → array of flat objects: no object nested inside a module or a task.
+    for (const name of ['modules', 'tasks']) {
+      const item = reduced.properties[name]?.items?.properties ?? {};
+      expect(Object.values(item).every((field) => field.type !== 'object')).toBe(true);
+    }
+    expect(Object.keys(reduced.properties.tasks?.items?.properties ?? {})).toEqual([
+      'module',
+      'day',
+      'kind',
+      'title',
+      'description',
+      'estimatedMinutes',
+    ]);
+  });
+
   it('sends the reduced schema and still rejects answers that break the full schema', async () => {
     const tooLong = {
       summary: 'x'.repeat(3_000),
@@ -387,8 +449,9 @@ describe('Gemini structured output schema', () => {
       selectProvider: () => gemini,
       usageGuard: createSupabaseUsage(supabase.factory).guard,
       profileService: createProfileService(supabase.factory),
-      aiTimeouts: { chat: 1_000, code_review: 1_000 },
+      aiTimeouts: { chat: 1_000, code_review: 1_000, learning_plan: 1_000 },
       historyLimits: CHAT_HISTORY_DEFAULTS,
+      learningPlanStore: createLearningPlanStore(supabase.factory),
     });
 
     await expect(

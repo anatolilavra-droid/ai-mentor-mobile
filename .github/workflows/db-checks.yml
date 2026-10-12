@@ -1,0 +1,69 @@
+# Applies every migration in supabase/migrations to a throwaway Postgres and runs every
+# test script in supabase/tests (RLS, grants, functions, limits).
+#
+# supabase/tests/ci/bootstrap_supabase.sql stands in for what a Supabase project already
+# has (roles, auth.users, auth.uid(), default privileges). It is close to, not identical
+# with, the real platform: the final check is still running the migration and the test
+# scripts in the Supabase SQL Editor. No secrets are used and nothing reaches Supabase.
+
+name: Database checks
+
+on:
+  push:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/db-checks.yml'
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/db-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Migrations and RLS tests on Postgres 17
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6
+
+      - name: Apply migrations and run the test scripts
+        # bash with pipefail: a failure inside the braces must fail the step despite tee.
+        shell: bash
+        run: |
+          {
+            echo "## Database checks"
+            echo ""
+            echo '```'
+            supabase/tests/ci/apply_and_test.sh
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"

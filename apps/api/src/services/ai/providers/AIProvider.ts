@@ -48,12 +48,44 @@ export const codeReviewResultSchema = z.object({
 });
 export type CodeReviewResult = z.infer<typeof codeReviewResultSchema>;
 
+/** Structured (JSON) answers of features other than code review. */
+export type StructuredTask = 'learning_plan';
+
+export type GenerateStructuredInput = {
+  task: StructuredTask;
+  system: string;
+  /** User text is wrapped by the prompt as delimited data. */
+  messages: ChatMessage[];
+  /** JSON Schema of the expected output, for providers that can constrain their answer. */
+  outputJsonSchema: unknown;
+  maxOutputTokens: number;
+  /** Largest raw answer (characters) accepted before it is parsed. */
+  maxResponseChars: number;
+  signal: AbortSignal;
+  /**
+   * Enums and numbers only, for the mock's deterministic answer. Real providers
+   * ignore them (everything they need is in the prompt).
+   */
+  hints: { technologyId: string; durationDays: number; dailyMinutes: number };
+};
+
+/** `output` is unchecked JSON; the feature service validates it with Zod. */
+export const structuredResultSchema = z.object({
+  output: z.unknown(),
+  model: z.string().min(1),
+  usage: tokenUsageSchema,
+  /** Size of the raw answer, for logs and the smoke test. */
+  responseChars: z.number().int().nonnegative(),
+});
+export type StructuredResult = z.infer<typeof structuredResultSchema>;
+
 export type { AIProviderName };
 
 export interface AIProvider {
   readonly name: AIProviderName;
   generateText(input: GenerateTextInput): Promise<GenerateTextResult>;
   reviewCode(input: CodeReviewInput): Promise<CodeReviewResult>;
+  generateStructured(input: GenerateStructuredInput): Promise<StructuredResult>;
 }
 
 /**

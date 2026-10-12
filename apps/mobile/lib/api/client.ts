@@ -2,11 +2,14 @@ import {
   chatResponseSchema,
   codeReviewResponseSchema,
   errorResponseSchema,
+  learningPlanResponseSchema,
   usageResponseSchema,
   type ChatRequest,
   type ChatResponse,
   type CodeReviewRequest,
   type CodeReviewResponse,
+  type LearningPlanRequest,
+  type LearningPlanResponse,
   type UsageResponse,
 } from '@ai-mentor/shared';
 import * as Crypto from 'expo-crypto';
@@ -19,6 +22,8 @@ import { ApiError } from './errors';
 
 /** A free Render service can need up to a minute to wake up. */
 export const API_TIMEOUT_MS = 90_000;
+/** A learning plan: a possible wake-up plus up to 90 s of AI on the server. */
+export const LEARNING_PLAN_TIMEOUT_MS = 120_000;
 
 export type ApiClientDeps = {
   baseUrl: string | null;
@@ -55,6 +60,8 @@ type RequestOptions<T extends z.ZodType> = {
   body?: unknown;
   schema: T;
   signal?: AbortSignal;
+  /** Overrides the client's timeout for one slow call. */
+  timeoutMs?: number;
 };
 
 export function createApiClient(deps: ApiClientDeps) {
@@ -77,7 +84,7 @@ export function createApiClient(deps: ApiClientDeps) {
     const timer = setTimeout(() => {
       timedOut = true;
       controller.abort();
-    }, timeoutMs);
+    }, options.timeoutMs ?? timeoutMs);
     const onCallerAbort = () => controller.abort();
     options.signal?.addEventListener('abort', onCallerAbort, { once: true });
 
@@ -113,9 +120,9 @@ export function createApiClient(deps: ApiClientDeps) {
     if (!response.ok) {
       const parsed = errorResponseSchema.safeParse(json);
       if (!parsed.success) throw new ApiError('BAD_RESPONSE', { status: response.status });
-      const { code, requestId, quota, details } = parsed.data.error;
+      const { code, requestId, quota, details, planLimit } = parsed.data.error;
       if (code === 'UNAUTHORIZED' && !retriedAuth) return send(options, true);
-      throw new ApiError(code, { status: response.status, requestId, quota, details });
+      throw new ApiError(code, { status: response.status, requestId, quota, details, planLimit });
     }
 
     const parsed = options.schema.safeParse(json);
@@ -140,6 +147,23 @@ export function createApiClient(deps: ApiClientDeps) {
           body,
           schema: codeReviewResponseSchema,
           signal,
+        },
+        false,
+      );
+    },
+    /**
+     * Generates and saves one learning plan. Never retried automatically: every call
+     * may use one of the month's generations.
+     */
+    learningPlan(body: LearningPlanRequest, signal?: AbortSignal): Promise<LearningPlanResponse> {
+      return send(
+        {
+          method: 'POST',
+          path: '/api/ai/learning-plan',
+          body,
+          schema: learningPlanResponseSchema,
+          signal,
+          timeoutMs: LEARNING_PLAN_TIMEOUT_MS,
         },
         false,
       );

@@ -5,6 +5,10 @@
 #
 # Run with an empty "model" first: the summary lists the models this key can use.
 # Then run again with one of those ids. Only fixed sample content is sent, no user data.
+#
+# Learning plans: the generated 7/14/28-day plans are saved in a throwaway Postgres
+# with the real migrations (begin/complete_learning_plan_generation), so the summary
+# shows that real AI output passes the database rules too. Nothing reaches Supabase.
 
 name: AI smoke test
 
@@ -13,6 +17,22 @@ on:
     inputs:
       model:
         description: 'Gemini model id (leave empty to list available models)'
+        required: false
+        default: ''
+      suite:
+        description: 'What to call (learning_plan alone uses fewer free-tier requests)'
+        type: choice
+        options:
+          - all
+          - chat_code_review
+          - learning_plan
+        default: all
+      price_input_per_million:
+        description: 'Optional: USD per 1M input tokens, for a cost estimate'
+        required: false
+        default: ''
+      price_output_per_million:
+        description: 'Optional: USD per 1M output tokens, for a cost estimate'
         required: false
         default: ''
 
@@ -25,9 +45,29 @@ concurrency:
 
 jobs:
   smoke:
-    name: Call Gemini with a fixed question and code review
+    name: Call Gemini with fixed questions, code review and learning plans
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
 
     steps:
       - name: Check out
@@ -49,4 +89,20 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           AI_MODEL: ${{ inputs.model }}
+          SMOKE_SUITE: ${{ inputs.suite }}
+          PRICE_INPUT_PER_M: ${{ inputs.price_input_per_million }}
+          PRICE_OUTPUT_PER_M: ${{ inputs.price_output_per_million }}
+          PLAN_OUTPUT_DIR: ${{ runner.temp }}/plans
         run: pnpm --filter @ai-mentor/api ai:smoke
+
+      - name: Save the generated plans with the real migrations
+        if: ${{ always() && inputs.model != '' && inputs.suite != 'chat_code_review' }}
+        # bash with pipefail: a failure inside the braces must fail the step despite tee.
+        shell: bash
+        run: |
+          supabase/tests/ci/apply_and_test.sh --migrations-only > /dev/null
+          {
+            echo "### Learning plans saved in Postgres (real migrations)"
+            echo ""
+            supabase/tests/ci/save_smoke_plans.sh "${{ runner.temp }}/plans"
+          } | tee -a "$GITHUB_STEP_SUMMARY"

@@ -6,6 +6,7 @@ import {
   type ChatMessage,
   type CodeReviewResult,
   type GenerateTextResult,
+  type StructuredResult,
 } from './AIProvider.js';
 
 /** The one SDK call the adapter uses. Tests replace it; no network is needed. */
@@ -112,6 +113,27 @@ function readResponse(response: GenerateContentResponse) {
   };
 }
 
+/** Reads a JSON answer: rejects cut-off, oversized and unparsable answers. */
+function readJson(response: GenerateContentResponse, what: string, maxChars = Infinity) {
+  const { text, finishReason, usage } = readResponse(response);
+  // A cut-off answer is incomplete JSON at best: report the real reason.
+  if (finishReason === FinishReason.MAX_TOKENS) {
+    throw new AIProviderError('invalid_response', `Gemini ${what} was cut off (MAX_TOKENS)`);
+  }
+  if (text.length > maxChars) {
+    throw new AIProviderError('invalid_response', `Gemini ${what} is too large (${text.length})`);
+  }
+  let output: unknown;
+  try {
+    output = JSON.parse(text);
+  } catch (error) {
+    throw new AIProviderError('invalid_response', 'Gemini returned invalid JSON', {
+      cause: error,
+    });
+  }
+  return { output, usage, responseChars: text.length };
+}
+
 export type GeminiProviderOptions = {
   apiKey: string;
   model: string;
@@ -189,20 +211,24 @@ export function createGeminiProvider(options: GeminiProviderOptions): AIProvider
           schema: input.outputJsonSchema,
         },
       );
-      const { text, finishReason, usage } = readResponse(response);
-      // A cut-off answer is incomplete JSON at best: report the real reason.
-      if (finishReason === FinishReason.MAX_TOKENS) {
-        throw new AIProviderError('invalid_response', 'Gemini review was cut off (MAX_TOKENS)');
-      }
-      let output: unknown;
-      try {
-        output = JSON.parse(text);
-      } catch (error) {
-        throw new AIProviderError('invalid_response', 'Gemini returned invalid JSON', {
-          cause: error,
-        });
-      }
+      const { output, usage } = readJson(response, 'review');
       return { output, model: response.modelVersion ?? model, usage };
+    },
+
+    async generateStructured(input): Promise<StructuredResult> {
+      const response = await generate(
+        input.system,
+        input.messages,
+        input.maxOutputTokens,
+        input.signal,
+        { schema: input.outputJsonSchema },
+      );
+      const { output, usage, responseChars } = readJson(
+        response,
+        input.task,
+        input.maxResponseChars,
+      );
+      return { output, model: response.modelVersion ?? model, usage, responseChars };
     },
   };
 }

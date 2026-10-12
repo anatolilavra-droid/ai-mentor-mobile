@@ -35,14 +35,15 @@ secret or a real AI key in `.env.example` or in code.
 
 ## Endpoints
 
-| Method | Path                  | Auth | Description                                          |
-| ------ | --------------------- | ---- | ---------------------------------------------------- |
-| GET    | `/health`             | no   | Liveness: `{ status, version, uptimeSeconds }`       |
-| GET    | `/api/me`             | yes  | The signed-in user's own profile (via RLS)           |
-| GET    | `/api/usage`          | yes  | Own plan, period and monthly usage per feature       |
-| GET    | `/api/subscription`   | yes  | Own plan and status (no row means Free)              |
-| POST   | `/api/ai/chat`        | yes  | AI mentor answer (mock, or Gemini for allowed users) |
-| POST   | `/api/ai/code-review` | yes  | Structured review of pasted code (never executed)    |
+| Method | Path                    | Auth | Description                                          |
+| ------ | ----------------------- | ---- | ---------------------------------------------------- |
+| GET    | `/health`               | no   | Liveness: `{ status, version, uptimeSeconds }`       |
+| GET    | `/api/me`               | yes  | The signed-in user's own profile (via RLS)           |
+| GET    | `/api/usage`            | yes  | Own plan, period and monthly usage per feature       |
+| GET    | `/api/subscription`     | yes  | Own plan and status (no row means Free)              |
+| POST   | `/api/ai/chat`          | yes  | AI mentor answer (mock, or Gemini for allowed users) |
+| POST   | `/api/ai/code-review`   | yes  | Structured review of pasted code (never executed)    |
+| POST   | `/api/ai/learning-plan` | yes  | Generates and saves a 7, 14 or 28-day learning plan  |
 
 Authenticated requests send `Authorization: Bearer <Supabase access token>`.
 
@@ -151,6 +152,42 @@ The code itself is never returned or logged (logs keep language, action,
 chars and lines). Only successful reviews count against the monthly
 `code_review` quota.
 
+### POST /api/ai/learning-plan
+
+```json
+{
+  "technologyId": "javascript",
+  "goal": "learn_javascript",
+  "goalDetails": "I want to build a small quiz game",
+  "durationDays": 14,
+  "dailyMinutes": 30
+}
+```
+
+`durationDays` is 7, 14 or 28; `goalDetails` is optional (up to 500 characters).
+The user always comes from the verified token; the body cannot name one.
+
+Flow (prompt `learning-plan/v1`):
+
+1. `begin_learning_plan_generation()` (as the user) checks the limits from the
+   database and reserves a slot: active plans (Free 1, Pro 20) and plan
+   generations this month (Free 3, Pro 30). A per-user lock serializes parallel
+   requests. Refused → `PLAN_LIMIT_REACHED` (409) or `GENERATION_LIMIT_REACHED`
+   (429) with `planLimit`; the AI is not called.
+2. The AI answers a flat JSON plan (modules and daily tasks), checked with Zod,
+   then `finalizePlan()` applies the business rules (days within the plan, at
+   most 3 tasks a day, no empty modules, tasks ordered by day).
+3. `complete_learning_plan_generation()` saves the plan, its modules and tasks
+   and counts the generation in one transaction.
+4. Any failure after step 1 calls `fail_learning_plan_generation()`: nothing is
+   saved and nothing is counted. A reservation that is never finished expires
+   after 3 minutes.
+
+Response: the saved plan as Supabase returns it (`plan` with `learning_modules`
+and `learning_tasks`), `limits`, `provider`, `promptVersion`, `requestId` and
+token `usage`. Reading, ticking tasks, archiving and deleting happen in the app
+directly through Supabase (RLS and database functions), not through this API.
+
 ### GET /api/usage
 
 ```json
@@ -181,24 +218,29 @@ the `X-Request-Id` header):
 `details` (field path and message) is added only for `VALIDATION_ERROR`.
 `USAGE_LIMIT_REACHED` adds `quota`:
 `{ "feature": "chat", "used": 30, "limit": 30, "resetsAt": "2026-11-01T00:00:00.000Z" }`.
+`PLAN_LIMIT_REACHED` and `GENERATION_LIMIT_REACHED` add `planLimit`:
+`{ "kind": "monthly_generations", "used": 3, "limit": 3, "resetsAt": "2026-11-01T00:00:00.000Z" }`
+(`kind` is `active_plans` or `monthly_generations`).
 
-| Code                     | HTTP |
-| ------------------------ | ---- |
-| `VALIDATION_ERROR`       | 400  |
-| `UNAUTHORIZED`           | 401  |
-| `FORBIDDEN`              | 403  |
-| `NOT_FOUND`              | 404  |
-| `PROFILE_NOT_FOUND`      | 404  |
-| `PAYLOAD_TOO_LARGE`      | 413  |
-| `UNSUPPORTED_MEDIA_TYPE` | 415  |
-| `RATE_LIMITED`           | 429  |
-| `USAGE_LIMIT_REACHED`    | 429  |
-| `INTERNAL_ERROR`         | 500  |
-| `AI_PROVIDER_ERROR`      | 502  |
-| `AI_INVALID_RESPONSE`    | 502  |
-| `AI_PROVIDER_BUSY`       | 503  |
-| `SERVICE_UNAVAILABLE`    | 503  |
-| `TIMEOUT`                | 504  |
+| Code                       | HTTP |
+| -------------------------- | ---- |
+| `VALIDATION_ERROR`         | 400  |
+| `UNAUTHORIZED`             | 401  |
+| `FORBIDDEN`                | 403  |
+| `NOT_FOUND`                | 404  |
+| `PROFILE_NOT_FOUND`        | 404  |
+| `PAYLOAD_TOO_LARGE`        | 413  |
+| `UNSUPPORTED_MEDIA_TYPE`   | 415  |
+| `RATE_LIMITED`             | 429  |
+| `USAGE_LIMIT_REACHED`      | 429  |
+| `PLAN_LIMIT_REACHED`       | 409  |
+| `GENERATION_LIMIT_REACHED` | 429  |
+| `INTERNAL_ERROR`           | 500  |
+| `AI_PROVIDER_ERROR`        | 502  |
+| `AI_INVALID_RESPONSE`      | 502  |
+| `AI_PROVIDER_BUSY`         | 503  |
+| `SERVICE_UNAVAILABLE`      | 503  |
+| `TIMEOUT`                  | 504  |
 
 ## How it works
 
@@ -223,9 +265,10 @@ helmet → request id + log → abort signal → request timeout → per-IP limi
   tokens, chat messages and code are never logged.
 - **Rate limits**: a generous per-IP limit on every route and a strict
   per-user limit on AI routes. Both are in memory (one instance).
-- **Timeouts**: JWKS and Supabase 5 s; AI call `AI_TIMEOUT_MS` (chat, 30 s) or
-  `CODE_REVIEW_AI_TIMEOUT_MS` (code review, 50 s); whole request
-  `REQUEST_TIMEOUT_MS` (60 s, must be greater than both AI timeouts). A
+- **Timeouts**: JWKS and Supabase 5 s; AI call `AI_TIMEOUT_MS` (chat, 30 s),
+  `CODE_REVIEW_AI_TIMEOUT_MS` (code review, 50 s) or
+  `LEARNING_PLAN_AI_TIMEOUT_MS` (learning plans, 90 s); whole request
+  `REQUEST_TIMEOUT_MS` (100 s, must be greater than every AI timeout). A
   timeout or a client disconnect aborts the provider request (504 `TIMEOUT`),
   and nothing is counted against the quota.
 - **Usage and plans**: before an AI call the API reads the caller's quota with
@@ -282,6 +325,15 @@ GitHub → Actions → **AI smoke test** → Run workflow:
 3. Run again with one id: the summary shows a real answer to a fixed question
    and a schema-checked code review for each action (explain, review, fix,
    improve) of one fixed sample, with latency and token counts.
+4. Learning plans (`suite`: `all` or `learning_plan`): one fixed request each for
+   7, 14 and 28 days, with time, request and response size, tokens, modules,
+   tasks, JSON + Zod + business-rule results and an optional cost estimate
+   (`price_*` inputs; never guessed). Each valid plan is then saved through the
+   real migrations in a throwaway Postgres, and a deliberate 1.5 s timeout checks
+   that the call is aborted. `suite: learning_plan` sends fewer requests when the
+   free tier is tight.
+
+`AI_MODEL=mock` runs the same script locally on the mock provider (no key).
 
 Only fixed sample content is sent. The key is never printed.
 

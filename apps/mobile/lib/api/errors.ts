@@ -1,4 +1,4 @@
-import type { ErrorCode, ErrorDetail, QuotaDetail } from '@ai-mentor/shared';
+import type { ErrorCode, ErrorDetail, PlanLimitDetail, QuotaDetail } from '@ai-mentor/shared';
 
 import type { TranslationKey } from '@/lib/i18n';
 
@@ -14,6 +14,8 @@ export class ApiError extends Error {
   readonly status: number | null;
   readonly requestId: string | null;
   readonly quota: QuotaDetail | null;
+  /** Learning plans: which limit (active plans or monthly generations) was reached. */
+  readonly planLimit: PlanLimitDetail | null;
   /** Validation details (field path and a stable message key). */
   readonly details: readonly ErrorDetail[];
 
@@ -23,6 +25,7 @@ export class ApiError extends Error {
       status?: number;
       requestId?: string;
       quota?: QuotaDetail;
+      planLimit?: PlanLimitDetail;
       details?: readonly ErrorDetail[];
       cause?: unknown;
     } = {},
@@ -33,6 +36,7 @@ export class ApiError extends Error {
     this.status = options.status ?? null;
     this.requestId = options.requestId ?? null;
     this.quota = options.quota ?? null;
+    this.planLimit = options.planLimit ?? null;
     this.details = options.details ?? [];
   }
 }
@@ -79,6 +83,8 @@ export function isRetryable(error: unknown): boolean {
     'CANCELLED',
     'NOT_CONFIGURED',
     'USAGE_LIMIT_REACHED',
+    'PLAN_LIMIT_REACHED',
+    'GENERATION_LIMIT_REACHED',
     'VALIDATION_ERROR',
     'PAYLOAD_TOO_LARGE',
   ].includes(error.code);

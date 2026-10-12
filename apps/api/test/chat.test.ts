@@ -42,6 +42,9 @@ function recordingProvider(
     reviewCode: async () => {
       throw new Error('not used');
     },
+    generateStructured: async () => {
+      throw new Error('not used');
+    },
   };
   return { provider, inputs };
 }

@@ -1,12 +1,18 @@
 import { Router, type RequestHandler } from 'express';
 
-import { createChatHandler, createCodeReviewHandler } from '../controllers/ai.controller.js';
+import {
+  createChatHandler,
+  createCodeReviewHandler,
+  createLearningPlanHandler,
+} from '../controllers/ai.controller.js';
 import { defineRoute } from '../lib/defineRoute.js';
 import {
   chatRequestSchema,
   chatResponseSchema,
   codeReviewRequestSchema,
   codeReviewResponseSchema,
+  learningPlanRequestSchema,
+  learningPlanResponseSchema,
 } from '@ai-mentor/shared';
 import { emptyQuerySchema } from '../schemas/common.schema.js';
 import type { AIService } from '../services/ai/ai.service.js';
@@ -35,6 +41,16 @@ export function aiRoutes(deps: {
     body: codeReviewRequestSchema,
     response: codeReviewResponseSchema,
     handler: createCodeReviewHandler(deps.aiService),
+  });
+  defineRoute(router, {
+    method: 'post',
+    path: '/api/ai/learning-plan',
+    // The user comes from the verified token only; the body never names a user.
+    middleware: [deps.auth, deps.aiUserLimiter],
+    query: emptyQuerySchema,
+    body: learningPlanRequestSchema,
+    response: learningPlanResponseSchema,
+    handler: createLearningPlanHandler(deps.aiService),
   });
   return router;
 }

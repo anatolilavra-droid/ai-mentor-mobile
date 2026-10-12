@@ -57,13 +57,19 @@ region, non-secret variables such as `CODE_REVIEW_AI_TIMEOUT_MS` and
 
 ## Timeouts
 
-| Variable                    | Default | Purpose                                              |
-| --------------------------- | ------- | ---------------------------------------------------- |
-| `AI_TIMEOUT_MS`             | 30 000  | one chat answer                                      |
-| `CODE_REVIEW_AI_TIMEOUT_MS` | 50 000  | one code review (structured JSON with fixed code)    |
-| `REQUEST_TIMEOUT_MS`        | 60 000  | whole request; must be greater than both AI timeouts |
+| Variable                      | Default | Purpose                                              |
+| ----------------------------- | ------- | ---------------------------------------------------- |
+| `AI_TIMEOUT_MS`               | 30 000  | one chat answer                                      |
+| `CODE_REVIEW_AI_TIMEOUT_MS`   | 50 000  | one code review (structured JSON with fixed code)    |
+| `LEARNING_PLAN_AI_TIMEOUT_MS` | 90 000  | one learning plan (up to 28 days of tasks)           |
+| `REQUEST_TIMEOUT_MS`          | 100 000 | whole request; must be greater than every AI timeout |
 
-The app waits up to 90 seconds (enough for a wake-up after sleep). A timeout
+The API refuses to start when `REQUEST_TIMEOUT_MS` is not greater than every AI
+timeout. Phase 7a raised it from 60 000 to 100 000: check that Render shows
+`REQUEST_TIMEOUT_MS=100000` and `LEARNING_PLAN_AI_TIMEOUT_MS=90000` (Blueprint sync,
+or set them by hand) **before** the Manual Deploy of Phase 7a.
+
+The app waits up to 90 seconds (120 for a learning plan), enough for a wake-up after sleep. A timeout
 returns `TIMEOUT` (504), aborts the provider request and is not counted
 against the quota; the app offers Retry and never repeats an AI request by
 itself.

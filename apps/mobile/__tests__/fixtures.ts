@@ -64,3 +64,55 @@ export const phase2Profile: ProfileRow = {
   onboarding_completed: false,
   onboarding_completed_at: null,
 };
+
+/** A saved 3-day learning plan as Supabase returns it (detail select). */
+export function planDetail(overrides: Record<string, unknown> = {}) {
+  const planId = '00000000-0000-4000-8000-0000000000a1';
+  const moduleId = '00000000-0000-4000-8000-0000000000b1';
+  return {
+    id: planId,
+    user_id: testUser.id,
+    technology_id: 'javascript',
+    goal: 'learn_javascript',
+    goal_details: 'My private goal words',
+    experience_level: 'beginner',
+    daily_minutes: 30,
+    duration_days: 7,
+    title: 'JavaScript week',
+    summary: 'Small steps.',
+    review_questions: ['What is a variable?'],
+    next_step: 'Start with day 1.',
+    status: 'active',
+    prompt_version: 'learning-plan/v1',
+    provider: 'mock',
+    model: 'mock-mentor-1',
+    created_at: '2026-10-12T10:00:00.000000+00:00',
+    updated_at: '2026-10-12T10:00:00.000000+00:00',
+    archived_at: null,
+    learning_modules: [
+      {
+        id: moduleId,
+        plan_id: planId,
+        user_id: testUser.id,
+        position: 1,
+        title: 'Basics',
+        description: 'Values.',
+        objectives: [],
+      },
+    ],
+    learning_tasks: [1, 2, 3].map((day) => ({
+      id: `00000000-0000-4000-8000-00000000000${day}`,
+      plan_id: planId,
+      module_id: moduleId,
+      user_id: testUser.id,
+      day_number: day,
+      position: day,
+      kind: 'learn',
+      title: `Day ${day}`,
+      description: 'Do it.',
+      estimated_minutes: 20,
+      completed_at: day === 1 ? '2026-10-12T11:00:00+00:00' : null,
+    })),
+    ...overrides,
+  };
+}
